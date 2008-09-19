@@ -22,8 +22,9 @@ class blSceneNode:
         for soref in node.sceneObjects:
             obj = plSceneObject.Convert(soref.object)
             sobj = blSceneObject()
-            blObj = sobj.importObj(obj, rm, Blender.Scene.Get(page.page))
-            #bobj = sobj.Import(rm, obj, Blender.Scene.Get(page.page))
+            blObj = sobj.importObj(obj, rm, Blender.Scene.Get(page.page[:20]))
+            #bobj = sobj.Import(rm, obj, Blender.Scene.Get(page.page[:20]))
+                
             try:
                 Blender.Scene.Get('_GLOBAL__AGE').objects.link(blObj)
             except:

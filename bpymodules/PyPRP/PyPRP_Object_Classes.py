@@ -17,6 +17,8 @@ class blSceneObject:
             drawiface = plDrawInterface.Convert(obj.draw.object)
             di = blDrawInterface()
             data = di.importObj(drawiface, rm)
+        if data is None:
+            data = 'Empty'
         
         #Handle interfaces
         
@@ -58,15 +60,15 @@ class blSceneObject:
         LightInfo = False
         SpawnMod = False
 
-        for inter in obj.interfaces: 
+        for inter in obj.interfaces:
             #LampInfo
-            if inter.type == 0x55:
-                LightInfo = 'Sun' 
-            elif inter.type == 0x56:
-                LightInfo = 'Lamp'  
-            elif inter.type == 0x57:
+            if inter.type == plFactory.kDirectionalLightInfo:
+                LightInfo = 'Sun'
+            elif inter.type == plFactory.kOmniLightInfo:
+                LightInfo = 'Lamp'
+            elif inter.type == plFactory.kSpotLightInfo:
                 LightInfo = 'Spot'
-            elif inter.type == 0x6A:
+            elif inter.type == plFactory.kLimitedDirLightInfo:
                 LightInfo = 'Area'
 
         for mod in obj.modifiers:
@@ -145,7 +147,8 @@ class blDrawInterface:
             #span.ImportObject(dspan,blObj,drawable[1])
             data = span.importObj(dspan, rm, data, drawable[1])
         
-        data.calcNormals()
+        if data is not None:
+            data.calcNormals()
         return data
 
     def Export(self,rm,loc,object,scnObj):
@@ -153,7 +156,7 @@ class blDrawInterface:
         DrawInterface.owner = scnObj.key
         rm.AddObject(loc,DrawInterface)
         return DrawInterface
-
+
 class blAudioInterface:
     def Export(self,rm,loc,name):
         rm.AddObject(loc,self)

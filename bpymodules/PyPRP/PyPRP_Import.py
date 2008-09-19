@@ -36,6 +36,7 @@ def importFile(path, debug=True):
     else:
         raise IOError("Could not load specified file %s" % (path))
     
+    Blender.Scene.Get('_GLOBAL__AGE').makeCurrent()
     Blender.Window.QRedrawAll()
 
 def importPrp(rm, page):
@@ -47,10 +48,10 @@ def importPrp(rm, page):
         return
     logging.info("Importing %s::%s" % (page.age, page.page))
     try:
-        scn = Blender.Scene.Get(page.page)
+        scn = Blender.Scene.Get(page.page[:20])
     except NameError:
-        scn = Blender.Scene.New(page.page)
-        logging.debug("Creating Blender scene %s" % (page.page))
+        scn = Blender.Scene.New(page.page[:20])
+        logging.debug("Creating Blender scene %s" % (page.page[:20]))
     scn.makeCurrent()
     scnNode = blSceneNode()
     scnNode.importObj(node, rm, page)

@@ -12,8 +12,9 @@ def ExportMain(filename):
     print file
     print agename
     rm = plResManager(pvPots)
-    for i in range(len(Blender.Scene.Get())):
-        scn = Blender.Scene.Get()[i]
+    scene = Blender.Scene.Get()
+    for i in range(len(scene)):
+        scn = scene[i]
         loc = plLocation()
         loc.prefix = 1
         loc.page = i
