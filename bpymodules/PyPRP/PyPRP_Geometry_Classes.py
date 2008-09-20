@@ -31,13 +31,13 @@ class blDrawableSpans:
             indices = obj.getIndices(icicle)
             baseIndex = ((data.verts[-1].index+1) if ((len(data.verts)) > 0) else 0)
             
-            i = baseIndex
+            i = 0
             logging.debug("\tImporting %i vertices." % (len(verts)))
             data.verts.extend([Mathutils.Vector(v.pos.X,v.pos.Y,v.pos.Z) for v in verts])
             for v in verts:
                 vert = data.verts[i]
                 if vert.index != i:
-                    logging.debug("\tIndex should be %i. Is really %i." % (i, vert.index))
+                    logging.debug("\tIndex should be %i. Is really %i." % (i + baseIndex, vert.index))
                 vert.no = Mathutils.Vector(v.normal.X,v.normal.Y,v.normal.Z)
                 i += 1
             
@@ -61,60 +61,3 @@ class blDrawableSpans:
                 j += 3
         
         return data
-    
-    def ImportObject(self,span,blenderobject,key):
-        print "      Importing mesh with key %i from %s" % (key,span.key.name)
-        mesh = blenderobject.getData(False,True)
-        mesh.addColorLayer("Color")
-        mesh.activeColorLayer = "Color"
-        di = span.DIIndices[key] #plDISpanIndex
-        
-        s_BaseIndex = 0
-        verts = []
-        bufGroups = span.bufferGroups
-
-        for idx in di.indices:
-            ice = span.spans[idx] #plIcicle
-
-            bufferGroup = bufGroups[ice.groupIdx]
-            UV_count = bufferGroup.numUVs
-            UVLayers = mesh.getUVLayerNames()
-            LenUVLayers = len(UVLayers)
-            if LenUVLayers < UV_count:
-                for i in range(LenUVLayers,UV_count):
-                    mesh.addUVLayer("UVLayer" + str(i))
-            UVLayers = mesh.getUVLayerNames()
-            plVerts = span.getVerts(ice)
-            print "        Importing %i verts..." % len(plVerts)
-
-            vertidx = len(mesh.verts)
-            verts.extend(plVerts)
-            mesh.verts.extend([Mathutils.Vector(v.pos.X,v.pos.Y,v.pos.Z) for v in plVerts])
-            for v in plVerts:
-                vert = mesh.verts[vertidx]
-                vert.no = Mathutils.Vector(v.normal.X,v.normal.Y,v.normal.Z)
-                vertidx += 1
-
-            indices = span.getIndices(ice)
-            
-            faceIndices = mesh.faces.extend([[indices[(j*3)+c] + s_BaseIndex for c in range(3)] for j in range(len(indices) / 3)], indexList=True)
-            j = 0
-            for faceIdx in faceIndices:
-                if faceIdx is None:
-                    continue
-                blface = mesh.faces[faceidx]
-                for vi in range(3):
-                    vert = verts[indices[j+vi]]
-                    col = hsColor32(vert.color)
-                    blface.col[vi].r = col.red
-                    blface.col[vi].g = col.green
-                    blface.col[vi].b = col.blue
-                    blface.col[vi].a = col.alpha
-                    for uvidx in range(UV_count):
-                        mesh.activeUVLayer = UVLayers[uvidx] #UVLayerName
-                        blface.uv[vi].x = vert.UVWs[uvidx].X
-                        blface.uv[vi].y = vert.UVWs[uvidx].Y #used to be 1-vert.UVWs[uvidx].Y not sure if this is important
-                j += 3
-            s_BaseIndex += ice.VLength
-        
-        mesh.calcNormals()
