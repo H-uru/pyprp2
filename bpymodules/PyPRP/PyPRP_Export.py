@@ -1,32 +1,49 @@
 from PyPlasma import *
 from PyPRP_Node import *
+from PyPRP_Surface_Classes import *
 import os
 import Blender
 
+version = pvPots
+
 def ExportMain(filename):
-    filenameS = os.path.split(filename)
-    path = filenameS[0]
-    file = filenameS[1]
+    scenes = Blender.Scene.Get()
+    path, file = os.path.split(filename)
     agename = file[:len(file)-4]
+    e = "Error: Need to specify a .age filename."
+    if file[len(file)-4:] != ".age":
+        raise e
     print path
     print file
     print agename
-    rm = plResManager(pvPots)
-    scene = Blender.Scene.Get()
-    for i in range(len(scene)):
-        scn = scene[i]
+    
+    rm = plResManager(version)    
+##    age = plAgeInfo().addPage('')
+    for i in range(len(scenes)):
+        scn = scenes[i]
         loc = plLocation()
-        loc.prefix = 1
-        loc.page = i
+        loc.page = 0
+        loc.prefix = i
+        
+        if version == pvEoa:
+            pageName = '%s_%s' % (agename,scn.name)
+        else:
+            pageName = '%s_District_%s' % (agename,scn.name)
 
-        print scn.name
-        nodeName = '%s_District_%s' % (agename,scn.name)
+        #all materials exported
+        for blMat in Material.Get():
+            bmat = blGMaterial()
+            bmat.Export(rm,loc,blMat)
+
+        #then do the tree-export thing
         node = blSceneNode()
-        node.Export(rm,loc,scn,nodeName)
+        node.Export(rm,loc,scn)
+
         page = plPageInfo()
         page.location = loc
         page.age = agename
         page.page = scn.name
         rm.AddPage(page)
-        rm.WritePage(os.path.join(path,nodeName)+'.prp', page)
+        print rm.getKeys(loc,0)
+        rm.WritePage(os.path.join(path,pageName)+'.prp', page)
 

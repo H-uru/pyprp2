@@ -8,12 +8,12 @@ class blSceneNode:
     def __init__(self):
         pass
     
-    def Export(self,rm,loc,scn,nodeName):
-        node = plSceneNode(nodeName)
-        for object in scn.objects:
-            blSceneObj = blSceneObject()
-            node.addSceneObject(blSceneObj.Export(rm,loc,node,object).key)
+    def Export(self,rm,loc,scn):
+        node = plSceneNode(scn.name)
         rm.AddObject(loc,node)
+        for blObj in scn.objects:
+            blSceneObj = blSceneObject()
+            node.addSceneObject(blSceneObj.Export(rm,loc,blObj).key)
         return node
 
     def importObj(self, node, rm, page):

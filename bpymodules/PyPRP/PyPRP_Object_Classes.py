@@ -42,16 +42,14 @@ class blSceneObject:
         
         return blObj
     
-    def Export(self,rm,loc,node,object):
-        SceneObj = plSceneObject(object.name)
-        SceneObj.sceneNode = node.key
-
-        if object.type == 'Mesh':
+    def Export(self,rm,loc,blObj):
+        so = plSceneObject(blObj.name)
+        so.sceneNode = rm.getSceneNode(loc).key
+        if blObj.type == 'Mesh':
             DrawInterface = blDrawInterface()
-            SceneObj.draw = DrawInterface.Export(rm,loc,object,SceneObj).key
-
-        rm.AddObject(loc,SceneObj)
-        return SceneObj
+            so.draw = DrawInterface.Export(rm,loc,blObj,so).key
+        rm.AddObject(loc, so)
+        return so
 
     def Import(self,rm,obj,scn):
         print "  Importing SceneObject %s" % obj.key.name
@@ -144,18 +142,18 @@ class blDrawInterface:
             
             dspan = plDrawableSpans.Convert(drawable[0].object)
             span = blDrawableSpans()
-            #span.ImportObject(dspan,blObj,drawable[1])
+            span.ImportObject(dspan,blObj,drawable[1])
             data = span.importObj(dspan, rm, data, drawable[1])
         
         if data is not None:
             data.calcNormals()
         return data
 
-    def Export(self,rm,loc,object,scnObj):
-        DrawInterface = plDrawInterface(object.name)
-        DrawInterface.owner = scnObj.key
-        rm.AddObject(loc,DrawInterface)
-        return DrawInterface
+    def Export(self,rm,loc,blObj,so):
+        di = plDrawInterface(blObj.name)
+        di.owner = so.key
+        rm.AddObject(loc,di)
+        return di
 
 class blAudioInterface:
     def Export(self,rm,loc,name):
