@@ -20,6 +20,8 @@ class blDrawableSpans:
         di = obj.DIIndices[idx]
         
         for ind in di.indices:
+            if len(obj.spans)-1 < ind:
+                continue
             icicle = obj.spans[ind]
             
             bufferGroup = obj.bufferGroups[icicle.groupIdx]

@@ -23,7 +23,7 @@ def importFile(path, debug=True):
         pages = age.getNumPages()
         i = 0
         while i < pages:
-            page = rm.FindPage(age.getPageLoc(i))
+            page = rm.FindPage(age.getPageLoc(i,rm.getVer()))
             importPrp(rm, page)
             i += 1
     elif parts[1] == '.prp':

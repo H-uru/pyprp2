@@ -142,7 +142,7 @@ class blDrawInterface:
             
             dspan = plDrawableSpans.Convert(drawable[0].object)
             span = blDrawableSpans()
-            span.ImportObject(dspan,blObj,drawable[1])
+##            span.ImportObject(dspan,blObj,drawable[1])
             data = span.importObj(dspan, rm, data, drawable[1])
         
         if data is not None:
