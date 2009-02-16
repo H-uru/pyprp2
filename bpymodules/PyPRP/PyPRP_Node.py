@@ -1,5 +1,5 @@
 from PyPlasma import *
-from PyPRP_Object_Classes import *
+from PyPRP_Object import *
 from PyPRP_Misc import *
 import Blender
 import logging
