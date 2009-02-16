@@ -1,5 +1,6 @@
 from Blender import *
 from PyPlasma import *
+from PyPRP_Surface import *
 import Blender
 import logging
 
@@ -7,11 +8,11 @@ class blDrawableSpans:
     def __init__(self):
         pass
     
-    def importObj(self, obj, rm, data, idx):
+    def importObj(self, obj, rm, data, idx, name):
         logging.info("[plDrawableSpans::%s]" % (obj.key.name))
         
         if data is None:
-            data = Blender.Mesh.New(obj.key.name)
+            data = Blender.Mesh.New(name)
         
         if (len(data.getColorLayerNames()) < 1) or not('Col' in data.getColorLayerNames()):
             data.addColorLayer('Col')
@@ -23,6 +24,14 @@ class blDrawableSpans:
             if len(obj.spans)-1 < ind:
                 continue
             icicle = obj.spans[ind]
+            
+            mat = hsGMaterial.Convert(obj.materials[icicle.materialIdx].object)
+            blmat = blGMaterial()
+            m = blmat.importObj(mat, rm)
+            
+            data.materials += [m]
+            
+            midx = data.materials.__len__() - 1
             
             bufferGroup = obj.bufferGroups[icicle.groupIdx]
             if (len(data.getUVLayerNames()) < bufferGroup.numUVs):
@@ -49,6 +58,7 @@ class blDrawableSpans:
                 if faceIdx is None:
                     continue
                 face = data.faces[faceIdx]
+                face.mat = midx
                 for c in range(3):
                     v = verts[indices[j+c]]
                     col = hsColor32(v.color)
@@ -60,6 +70,9 @@ class blDrawableSpans:
                         data.activeUVLayer = data.getUVLayerNames()[uvl]
                         face.uv[c].x = v.UVWs[uvl].X
                         face.uv[c].y = v.UVWs[uvl].Y
+                        face.image = None
+                        if m.textures[uvl].uvlayer == data.activeUVLayer:
+                            face.image = m.textures[uvl].tex.image
                 j += 3
         
         return data

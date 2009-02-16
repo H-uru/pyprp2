@@ -1,5 +1,6 @@
 from PyPlasma import *
-from PyPRP_Geometry_Classes import *
+from PyPRP_Geometry import *
+from PyPRP_Light import *
 import Blender
 import logging
 
@@ -11,6 +12,7 @@ class blSceneObject:
         logging.info("[plSceneObject::%s]" % (obj.key.name))
         
         data = 'Empty'
+        layers = [1]
         
         if obj.draw and obj.draw.object:
             logging.debug("\tWe have a DrawInterface!")
@@ -25,6 +27,34 @@ class blSceneObject:
         for mod in obj.modifiers:
             if mod.type == plFactory.kSpawnModifier: #SpawnModifier
                 data = 'Empty'
+                layers = [2]
+            elif mod.type == plFactory.kPostEffectMod: #PostEffectModifier
+                data = Blender.Camera.New('ortho', obj.key.name)
+                layers = [2]
+            elif mod.type == plFactory.kCameraModifier: #CameraModifier
+                data = Blender.Camera.New('persp', obj.key.name)
+                layers = [2]
+        
+        for iface in obj.interfaces:
+            if iface.type is plFactory.kDirectionalLightInfo:
+                data = Blender.Lamp.New('Sun', iface.name)
+                layers = [3]
+            elif iface.type is plFactory.kOmniLightInfo:
+                oli = plOmniLightInfo.Convert(iface.object)
+                bli = blOmniLightInfo()
+                data = bli.importObj(oli, rm)
+                layers = [3]
+            elif iface.type is plFactory.kSpotLightInfo:
+                data = Blender.Lamp.New('Spot', iface.name)
+                layers = [3]
+            elif iface.type is plFactory.kLimitedDirLightInfo:
+                data = Blender.Lamp.New('Area', iface.name)
+                layers = [3]
+            elif iface.type is plFactory.kOccluder:
+                occ = plOccluder.Convert(iface.object)
+                oci = blOccluder()
+                data = oci.importObj(occ, rm)
+                layers = [5]
         
         blObj = scn.objects.new(data, obj.key.name)
         
@@ -40,6 +70,7 @@ class blSceneObject:
             si = blSimulationInterface()
             si.importObj(simiface, rm, blObj)
         
+        blObj.layers = layers
         return blObj
     
     def Export(self,rm,loc,blObj):
@@ -142,8 +173,7 @@ class blDrawInterface:
             
             dspan = plDrawableSpans.Convert(drawable[0].object)
             span = blDrawableSpans()
-##            span.ImportObject(dspan,blObj,drawable[1])
-            data = span.importObj(dspan, rm, data, drawable[1])
+            data = span.importObj(dspan, rm, data, drawable[1], obj.key.name)
         
         if data is not None:
             data.calcNormals()
@@ -158,3 +188,27 @@ class blDrawInterface:
 class blAudioInterface:
     def Export(self,rm,loc,name):
         rm.AddObject(loc,self)
+
+class blOccluder:
+    def __init__(self):
+        pass
+    
+    def importObj(self, obj, rm):
+        logging.info("[plOccluder::%s]" % (obj.key.name))
+        data = Blender.Mesh.New(obj.key.name)
+
+        for p in obj.polys:
+            baseIndex = ((data.verts[-1].index+1) if ((len(data.verts)) > 0) else 0)
+            data.verts.extend([Mathutils.Vector(v.X,v.Y,v.Z) for v in p.verts])
+            i = 0
+            for v in p.verts:
+                vert = data.verts[i]
+                if vert.index != i:
+                    logging.debug("\tIndex should be %i. Is really %i." % (i + baseIndex, vert.index))
+                vert.no = Mathutils.Vector(p.norm.X,p.norm.Y,p.norm.Z)
+                i += 1
+            
+            if len(p.verts) is 3 or len(p.verts) is 4:
+                data.faces.extend([c + baseIndex for c in range(len(p.verts))], indexList=True)
+        
+        return data

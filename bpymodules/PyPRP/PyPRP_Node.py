@@ -16,16 +16,15 @@ class blSceneNode:
             node.addSceneObject(blSceneObj.Export(rm,loc,blObj).key)
         return node
 
-    def importObj(self, node, rm, page):
+    def importObj(self, node, rm, page, scn, globalScn):
         logging.info("[plSceneNode::%s]" % (node.key.name))
         
         for soref in node.sceneObjects:
             obj = plSceneObject.Convert(soref.object)
             sobj = blSceneObject()
-            blObj = sobj.importObj(obj, rm, Blender.Scene.Get(page.page[:20]))
-            #bobj = sobj.Import(rm, obj, Blender.Scene.Get(page.page[:20]))
+            blObj = sobj.importObj(obj, rm, scn)
                 
             try:
-                Blender.Scene.Get('_GLOBAL__AGE').objects.link(blObj)
+                globalScn.objects.link(blObj)
             except:
                 logger.error("Unable to link object to global scene!")
