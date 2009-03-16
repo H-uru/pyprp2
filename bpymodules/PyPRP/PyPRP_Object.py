@@ -26,8 +26,10 @@ class blSceneObject:
             simiface = plSimulationInterface.Convert(obj.sim.object)
             si = blSimulationInterface()
             if data != None:
+                logging.debug("\tWe have a SimulationInterface & DrawInterface!")
                 si.importObj(simiface, rm, scn)
             else:
+                logging.debug("\tWe have only a SimulationInterface!")
                 data = si.importObj(simiface, rm)
                 layers = [2]
         
@@ -105,17 +107,19 @@ class blSimulationInterface:
     def __init__(self):
         pass
     
-    def importObj(self, obj, rm, scn = None):
+    def importObj(self, obj, rm, scn = False):
         logging.info("[plSimulationInterface::%s]" % (obj.key.name))
         
+        logging.debug("\tScene is %s" % (str(scn)))
         if obj.physical.object:
             phy = plGenericPhysical.Convert(obj.physical.object)
             blp = blPhysical()
-            data = blp.importObj(phy, rm, scn != None)
+            data = blp.importObj(phy, rm, scn)
             
             if scn:
                 nObj = scn.objects.new(data, "Col" + obj.key.name)
                 nObj.layers = [2]
+                nObj.drawType = 2
                 return None
             else:
                 return data

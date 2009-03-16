@@ -22,9 +22,10 @@ class blSceneNode:
         for soref in node.sceneObjects:
             obj = plSceneObject.Convert(soref.object)
             sobj = blSceneObject()
-            blObj = sobj.importObj(obj, rm, scn)
-                
+            sobj.importObj(obj, rm, scn)
+        
+        for obj in scn.objects:
             try:
-                globalScn.objects.link(blObj)
+                globalScn.objects.link(obj)
             except:
                 logger.error("Unable to link object to global scene!")

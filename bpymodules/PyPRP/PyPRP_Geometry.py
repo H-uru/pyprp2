@@ -25,6 +25,9 @@ class blDrawableSpans:
                 continue
             icicle = obj.spans[ind]
             
+            #if len(data.materials) is 16:
+            #    continue
+            
             mat = hsGMaterial.Convert(obj.materials[icicle.materialIdx].object)
             blmat = blGMaterial()
             m = blmat.importObj(mat, rm)
@@ -69,10 +72,10 @@ class blDrawableSpans:
                     for uvl in range(bufferGroup.numUVs):
                         data.activeUVLayer = data.getUVLayerNames()[uvl]
                         face.uv[c].x = v.UVWs[uvl].X
-                        face.uv[c].y = v.UVWs[uvl].Y
+                        face.uv[c].y = -v.UVWs[uvl].Y
                         face.image = None
-                        if m.textures[uvl].uvlayer == data.activeUVLayer:
-                            face.image = m.textures[uvl].tex.image
+                        #if (uvl < len(m.textures) - 1) and (m.textures[uvl].uvlayer == data.activeUVLayer):
+                        #    face.image = m.textures[uvl].tex.image
                 j += 3
         
         return data

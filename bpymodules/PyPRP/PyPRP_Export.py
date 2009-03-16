@@ -1,6 +1,6 @@
 from PyPlasma import *
 from PyPRP_Node import *
-from PyPRP_Surface_Classes import *
+from PyPRP_Surface import *
 import os
 import Blender
 

@@ -17,7 +17,8 @@ class blPhysical:
         
         data.verts.extend([Mathutils.Vector(v.X,v.Y,v.Z) for v in obj.verts])
         
-        j = 0
-        data.faces.extend([[obj.indices[(j*3)+c] for c in range(3)] for j in range(len(obj.indices) / 3)], indexList=True)
+        if obj.boundsType is plSimDefs.kProxyBounds:
+            j = 0
+            data.faces.extend([[obj.indices[(j*3)+c] for c in range(3)] for j in range(len(obj.indices) / 3)], indexList=True)
         
         return data
