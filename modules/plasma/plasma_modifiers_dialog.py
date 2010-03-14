@@ -17,6 +17,15 @@ def AddModifier(modifiers,typestr):
     if typestr == "plSpawnModifier":
         newmod.FloatProperty(attr="test")
 
+class RemoveModifier(bpy.types.Operator):
+    bl_idname = "object.plremovemodifier"
+    bl_label = "Remove the active modifier"
+    def poll(self, context):
+        return context.active_object != None
+    def execute(self, context):
+        context.object.plasma_settings.modifiers.remove(context.object.plasma_settings.activemodifier)
+        return {'FINISHED'}
+    
 class PlCreateSpawnModifier(bpy.types.Operator):
     bl_idname = "object.plcreatespawnmodifier"
     bl_label = "Create a Spawn Mod"
@@ -45,20 +54,9 @@ class PlAddModifierMenu(bpy.types.Menu):
         layout.operator_context = 'EXEC_AREA'
         layout.operator("object.plcreatespawnmodifier", text="Spawn Point")
         layout.operator("object.plcreatewavesetmodifier", text="Waveset")
+
 class plModifierSettings(bpy.types.IDPropertyGroup):
     pass
-
-
-class PlasmaModTypes(bpy.types.Menu):
-    bl_idname = "PlasmaModTypes"
-    bl_label = "New Plasma Modifier"
-
-    def draw(self, context):
-        layout = self.layout
-        
-        layout.operator("export.plasmaexportprp", text="Export Prp")
-        layout.operator("wm.exit_blender", text="Quit", icon='QUIT')
-
 
 class plasma_modifiers(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
@@ -68,14 +66,22 @@ class plasma_modifiers(bpy.types.Panel):
     
     bpy.types.Object.PointerProperty(attr="plasma_settings", type=PlasmaSettings, name="Plasma Settings", description="Plasma Engine Object Settings")
     PlasmaSettings.CollectionProperty(attr="modifiers", type=plModifierSettings)
+    PlasmaSettings.IntProperty(attr="activemodifier",default=0)
     def draw(self, context):
         layout = self.layout
 
         ob = context.object
         pl = ob.plasma_settings
-        layout.menu("PlAddModifierMenu")
+        #layout.menu("PlAddModifierMenu")
         #layout.template_ID(ob, "parent")
-        #layout.template_list(pl, "plModifiers", pl, "custom", rows=2)
+        layout.label(text="Attached Plasma Modifiers:")
+
+        row = layout.row()
+        row.template_list(pl, "modifiers", pl, "activemodifier", rows=2)
+        col = row.column(align=True)
+        col.menu("PlAddModifierMenu", icon='ZOOMIN', text="")
+        col.operator("object.plremovemodifier", icon='ZOOMOUT', text="")
+        
         for modkey in pl.modifiers.keys():
             layout.label(text=modkey)
             #box = layout.template_modifier(md)
@@ -85,6 +91,7 @@ mod_creators = [PlCreateSpawnModifier, PlCreateWavesetModifier]
 def register():
     for mc in mod_creators:
         bpy.types.register(mc)
+    bpy.types.register(RemoveModifier)
     bpy.types.register(PlAddModifierMenu)
     bpy.types.register(plasma_modifiers)
 
@@ -92,5 +99,6 @@ def register():
 def unregister():
     for mc in mod_creators:
         bpy.types.unregister(mc)
+    bpy.types.unregister(RemoveModifier)
     bpy.types.unregister(PlAddModifierMenu)
     bpy.types.unregister(plasma_modifiers)
