@@ -2,7 +2,7 @@ from plasma_namespace import *
 from bpy.props import *
 
 
-def AddModifier(modifiers,typestr):
+def AddModifierFunc(modifiers,typestr):
     #if it's already there create a new name
     newmod = modifiers.add()
     if modifiers.get(typestr) == None:
@@ -28,7 +28,7 @@ class AddModifier(bpy.types.Operator):
                               name="Modifier Type",
                               description="Modifier Type")
     def execute(self, context):
-        print(type)
+        AddModifierFunc(context.object.plasma_settings.modifiers,self.properties.type)
         return {'FINISHED'}
 
     
@@ -40,35 +40,6 @@ class RemoveModifier(bpy.types.Operator):
     def execute(self, context):
         context.object.plasma_settings.modifiers.remove(context.object.plasma_settings.activemodifier)
         return {'FINISHED'}
-    
-class CreateSpawnModifier(bpy.types.Operator):
-    bl_idname = "object.plcreatespawnmodifier"
-    bl_label = "Create a Spawn Mod"
-    def poll(self, context):
-        return context.active_object != None
-    def execute(self, context):
-        AddModifier(context.object.plasma_settings.modifiers,"spawn")
-        return {'FINISHED'}
-
-class CreateWavesetModifier(bpy.types.Operator):
-    bl_idname = "object.plcreatewavesetmodifier"
-    bl_label = "Create a Waveset Mod"
-    def poll(self, context):
-        return context.active_object != None
-    def execute(self, context):
-        AddModifier(context.object.plasma_settings.modifiers,"waveset")
-        return {'FINISHED'}
-
-class AddModifierMenu(bpy.types.Menu):
-    bl_idname = "PlAddModifierMenu"
-    bl_label = "Add Plasma Modifier"
-
-    def draw(self, context):
-        layout = self.layout
-        
-        layout.operator_context = 'EXEC_AREA'
-        layout.operator("object.plcreatespawnmodifier", text="Spawn Point")
-        layout.operator("object.plcreatewavesetmodifier", text="Waveset")
 
 class ModifierSettings(bpy.types.IDPropertyGroup):
     pass
@@ -89,13 +60,13 @@ class plasma_modifiers(bpy.types.Panel):
         pl = ob.plasma_settings
         #layout.menu("PlAddModifierMenu")
         #layout.template_ID(ob, "parent")
-        layout.operator_menu_enum("object.pladdmodifier","type")
+        
         
         layout.label(text="Attached Plasma Modifiers:")
         row = layout.row()
         row.template_list(pl, "modifiers", pl, "activemodifier", rows=2)
         col = row.column(align=True)
-        col.menu("PlAddModifierMenu", icon='ZOOMIN', text="")
+        col.operator_menu_enum("object.pladdmodifier","type", icon='ZOOMIN', text="")
         col.operator("object.plremovemodifier", icon='ZOOMOUT', text="")
         
         if len(pl.modifiers) > 0: #if we have some mods
@@ -109,21 +80,14 @@ class plasma_modifiers(bpy.types.Panel):
         layout = self.layout
         layout.label(text="I am a Wave")
 
-mod_creators = [CreateSpawnModifier, CreateWavesetModifier]
 
 def register():
-    for mc in mod_creators:
-        bpy.types.register(mc)
     bpy.types.register(AddModifier)
     bpy.types.register(RemoveModifier)
-    bpy.types.register(AddModifierMenu)
     bpy.types.register(plasma_modifiers)
 
 
 def unregister():
-    for mc in mod_creators:
-        bpy.types.unregister(mc)
     bpy.types.register(AddModifier)
     bpy.types.unregister(RemoveModifier)
-    bpy.types.unregister(AddModifierMenu)
     bpy.types.unregister(plasma_modifiers)
