@@ -27,9 +27,8 @@ class AddModifier(bpy.types.Operator):
                               ),
                               name="Modifier Type",
                               description="Modifier Type")
-    def __init__(self, context, type):
-        print(type)
     def execute(self, context):
+        print(type)
         return {'FINISHED'}
 
     
