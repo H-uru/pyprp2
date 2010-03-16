@@ -40,22 +40,6 @@ class INFO_HT_header_plasma(space_info.INFO_HT_header):
         layout.template_ID(context.screen, "scene", new="scene.new", unlink="scene.delete")
 
         layout.separator()
-        view = context.window
-        view.EnumProperty(attr="plasma_version",
-                              items=(
-                                  ("PVPRIME", "Plasma 2.0 (59.11)", "Ages Beyond Myst, To D'ni, Untìl Uru"),
-                                  ("PVPOTS", "Plasma 2.0 (59.12)", "Path of the Shell, Complete  Chronicles"),
-                                  ("PVLIVE", "Plasma 2.0 (70.9)", "Myst Online: Uru Live, MOULagain, MagiQuest Online"),
-                                  ("PVEOA", "Plasma 2.1", "End of Ages, Crowthistle"),
-                                  ("PVHEX", "Plasma 3.0", "HexIsle")
-                              ),
-                              name="Plasma Version",
-                              description="Plasma Engine Version",
-                              default="PVPOTS") #bpy.types.Window.
-
-        layout.prop(view, "plasma_version", text="")
-
-        layout.separator()
 
         layout.template_operator_search()
         layout.template_running_jobs()

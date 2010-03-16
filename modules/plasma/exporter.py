@@ -2,7 +2,18 @@ import bpy
 from PyHSPlasma import *
 from bpy.props import *
 import modifiers
-version = pvPots
+
+def convert_version(spv):
+    if spv == "PVPRIME":
+        return pvPrime
+    elif spv == "PVPOTS":
+        return pvPots
+    elif spv == "PVLIVE":
+        return pvLive
+    elif spv == "PVEOA":
+        return pvEoa
+    elif spv == "PVHEX":
+        return pvHex
 
 class PlasmaExportPrp(bpy.types.Operator): #having this separate operator sucks, if there's a simpler way to do this please change it
     bl_idname = "export.plasmaexportprp"
@@ -21,14 +32,21 @@ class PlasmaExportResourcePage(bpy.types.Operator):
     path = StringProperty(name="File Path", description="File path used for exporting the PLY file", maxlen= 1024, default= "")
     use_setting = BoolProperty(name="Example Boolean", description="Example Tooltip", default= True)
 
-    type = bpy.props.EnumProperty(items=(('OPT_A', "First Option", "Description one"), ('OPT_B', "Second Option", "Description two.")),
-                        name="Example Enum",
-                        description="Choose between two items",
-                        default='OPT_A')
+    version = bpy.props.EnumProperty(attr="plasma_version",
+                              items=(
+                                  ("PVPRIME", "Plasma 2.0 (59.11)", "Ages Beyond Myst, To D'ni, Untìl Uru"),
+                                  ("PVPOTS", "Plasma 2.0 (59.12)", "Path of the Shell, Complete  Chronicles"),
+                                  ("PVLIVE", "Plasma 2.0 (70.9)", "Myst Online: Uru Live, MOULagain, MagiQuest Online"),
+                                  ("PVEOA", "Plasma 2.1", "End of Ages, Crowthistle"),
+                                  ("PVHEX", "Plasma 3.0", "HexIsle")
+                              ),
+                              name="Plasma Version",
+                              description="Plasma Engine Version",
+                              default="PVPOTS") #bpy.types.Window.
 
     def execute(self, context):
         print("Exporting as prp...")
-        rm = plResManager(version)
+        rm = plResManager(convert_version(self.properties.version))
         i = 0
         loc = plLocation()
         loc.page = 0
