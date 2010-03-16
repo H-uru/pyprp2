@@ -1,6 +1,19 @@
 from plasma_namespace import *
+from PyHSPlasma import *
 from bpy.props import *
 
+#so many static methods...
+class Waveset:
+    def CreateProps(mod):
+        pass
+    CreateProps = staticmethod(CreateProps)
+    def Draw(self, context, mod):
+        layout = self.layout
+        layout.label(text="No Waveset support yet")
+    Draw = staticmethod(Draw)
+    def Export(mod,plmod):
+        pass
+    Export = staticmethod(Export)
 
 def AddModifierFunc(modifiers,typestr):
     #if it's already there create a new name
@@ -12,11 +25,10 @@ def AddModifierFunc(modifiers,typestr):
         while modifiers.get(typestr+str(trynum)):
             trynum+=1
         newmod.name = typestr+str(trynum)
-    newmod.StringProperty(attr="type", name="Type", default=typestr)
     newmod.type = typestr
     print("Adding a %s"%newmod.type)
-    if typestr == "spawn":
-        newmod.FloatProperty(attr="test")
+    if typestr == "waveset":
+        WavesetProps(newmod)
 
 class AddModifier(bpy.types.Operator):
     bl_idname = "object.pladdmodifier"
@@ -41,28 +53,27 @@ class RemoveModifier(bpy.types.Operator):
         context.object.plasma_settings.modifiers.remove(context.object.plasma_settings.activemodifier)
         return {'FINISHED'}
 
-class ModifierSettings(bpy.types.IDPropertyGroup):
+class PlasmaModifierSettings(bpy.types.IDPropertyGroup):
     pass
+PlasmaModifierSettings.StringProperty(attr="type", name="Type", default="")
 
-class plasma_modifiers(bpy.types.Panel):
+class Modifiers(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "modifier"
     bl_label = "Plasma Modifiers"
     
     bpy.types.Object.PointerProperty(attr="plasma_settings", type=PlasmaSettings, name="Plasma Settings", description="Plasma Engine Object Settings")
-    PlasmaSettings.CollectionProperty(attr="modifiers", type=ModifierSettings)
+    PlasmaSettings.CollectionProperty(attr="modifiers", type=PlasmaModifierSettings)
     PlasmaSettings.IntProperty(attr="activemodifier",default=0)
     def draw(self, context):
         layout = self.layout
 
         ob = context.object
         pl = ob.plasma_settings
-        #layout.menu("PlAddModifierMenu")
         #layout.template_ID(ob, "parent")
         
-        
-        layout.label(text="Attached Plasma Modifiers:")
+        layout.label(text="List of Attached Mods:")
         row = layout.row()
         row.template_list(pl, "modifiers", pl, "activemodifier", rows=2)
         col = row.column(align=True)
@@ -72,22 +83,31 @@ class plasma_modifiers(bpy.types.Panel):
         if len(pl.modifiers) > 0: #if we have some mods
             mod = pl.modifiers[pl.activemodifier]
             layout.prop(mod,"name")
+            layout.label(text="type: %s"%mod.type)
             if mod.type == "spawn":
                 pass #no other settings than name to draw
             elif mod.type == "waveset":
-                self.drawWaveset(context, mod)
-    def drawWaveset(self, context, mod):
-        layout = self.layout
-        layout.label(text="I am a Wave")
+                Waveset.Draw(self, context, mod)
+    def Export(rm, loc, plblmods, so):
+        for mod in plblmods:
+            if mod.type == "spawn":
+                plmod = plSpawnModifier(mod.name)
+                rm.AddObject(loc,plmod)
+                so.addModifier(plmod.key)
+            else:
+                print("type %s not supported, skipping"%mod.type)
+    Export = staticmethod(Export)
 
 
 def register():
+    bpy.types.register(PlasmaModifierSettings)
     bpy.types.register(AddModifier)
     bpy.types.register(RemoveModifier)
-    bpy.types.register(plasma_modifiers)
+    bpy.types.register(Modifiers)
 
 
 def unregister():
-    bpy.types.register(AddModifier)
+    bpy.types.unregister(PlasmaModifierSettings)
+    bpy.types.unregister(AddModifier)
     bpy.types.unregister(RemoveModifier)
-    bpy.types.unregister(plasma_modifiers)
+    bpy.types.unregister(Modifiers)

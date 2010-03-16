@@ -2,22 +2,6 @@ import bpy,space_info,plasma
 from bpy.props import *
 from plasma import exporter
 
-class PlasmaExportPrp(bpy.types.Operator):
-    bl_idname = "export.plasmaexportprp"
-    bl_label = "PlasmaExportPrp"
-    path = StringProperty(name="File Path", description="File path used for exporting the PLY file", maxlen= 1024, default= "")
-
-    def poll(self, context):
-        return context.active_object != None
-
-    def execute(self, context):
-        #wm = context.manager
-        #wm.invoke_search_popup(self)
-        print(self.properties.path)
-        exporter.ExportAsPrp()
-        return {'FINISHED'}
-
-
 
 class INFO_MT_plasma(bpy.types.Menu):
     bl_idname = "INFO_MT_plasma"
@@ -25,7 +9,6 @@ class INFO_MT_plasma(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        
         layout.operator_context = 'EXEC_AREA'
         layout.operator("export.plasmaexportprp", text="Export Prp")
         layout.operator("wm.exit_blender", text="Quit", icon='QUIT')
@@ -57,7 +40,7 @@ class INFO_HT_header_plasma(space_info.INFO_HT_header):
         layout.template_ID(context.screen, "scene", new="scene.new", unlink="scene.delete")
 
         layout.separator()
-        view = context.space_data
+        view = context.window
         view.EnumProperty(attr="plasma_version",
                               items=(
                                   ("PVPRIME", "Plasma 2.0 (59.11)", "Ages Beyond Myst, To D'ni, Untìl Uru"),
@@ -82,14 +65,14 @@ class INFO_HT_header_plasma(space_info.INFO_HT_header):
         layout.operator("wm.window_fullscreen_toggle", icon='FULLSCREEN_ENTER', text="")
 
 def register():
-    bpy.types.register(PlasmaExportPrp)
     bpy.types.register(INFO_MT_plasma)
     bpy.types.register(INFO_HT_header_plasma)
+    bpy.types.register(exporter.PlasmaExportPrp)
     bpy.types.register(exporter.PlasmaExportResourcePage)
 
     
 def unregister():
-    bpy.types.unregister(PlasmaExportPrp)
     bpy.types.unregister(INFO_MT_plasma)
     bpy.types.unregister(INFO_HT_header_plasma)
+    bpy.types.unregister(exporter.PlasmaExportPrp)
     bpy.types.unregister(exporter.PlasmaExportResourcePage)

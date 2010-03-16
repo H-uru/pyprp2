@@ -1,10 +1,10 @@
 # PyPlasma init
 
 import bpy
-import plasma_headers
-import plasma_physics_dialog
-import plasma_material_dialog
-import plasma_modifiers_dialog
+import headers
+import physics
+import material
+import modifiers
 
 hide = [
     bpy.types.CLOTH_MT_presets,
@@ -72,8 +72,8 @@ def disable_panels():
 def plRegister():
     #print("plNetMsgPong!")
     disable_panels()
-    plasma_headers.register()
-    plasma_physics_dialog.register()
-    plasma_modifiers_dialog.register()
+    headers.register()
+    physics.register()
+    modifiers.register()
 
    

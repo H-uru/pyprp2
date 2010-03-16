@@ -1,17 +1,17 @@
 from plasma_namespace import *
 
-class PHYSICS_PT_plasma(bpy.types.Panel):
+class Physical(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "physics"
-    bl_label = "plPhysical"
+    bl_label = "Plasma Physical"
     #I hope recreating this type isn't too much of a hit.  If there's a way to get context passed to the creator it could test for if it's there.
     bpy.types.Object.PointerProperty(attr="plasma_settings", type=PlasmaSettings, name="Plasma Settings", description="Plasma Engine Object Settings")
 
-    PlasmaSettings.FloatProperty(attr="plPhysicsMass",name="Mass",default=0.0,soft_min=0,soft_max=1000)
-    PlasmaSettings.FloatProperty(attr="plPhysicsFriction",name="Friction",default=0.0,soft_min=0,soft_max=1000)
-    PlasmaSettings.FloatProperty(attr="plPhysicsRestitution",name="Restitution",default=0.0,soft_min=0,soft_max=1000)
-    PlasmaSettings.EnumProperty(attr="plPhysicsBounds",
+    PlasmaSettings.FloatProperty(attr="physicsmass",name="Mass",default=0.0,soft_min=0,soft_max=1000)
+    PlasmaSettings.FloatProperty(attr="physicsfriction",name="Friction",default=0.0,soft_min=0,soft_max=1000)
+    PlasmaSettings.FloatProperty(attr="physicsrestitution",name="Restitution",default=0.0,soft_min=0,soft_max=1000)
+    PlasmaSettings.EnumProperty(attr="physicsbounds",
                               items=(
                                   ("1", "Box", ""),
                                   ("2", "Sphere", ""),
@@ -23,33 +23,33 @@ class PHYSICS_PT_plasma(bpy.types.Panel):
                               name="Bounds Type",
                               description="Bounds Type",
                               default="3")
-    PlasmaSettings.StringProperty(attr="plPhysicsSubWorld")
-    PlasmaSettings.StringProperty(attr="plPhysicsSndGroup")
+    PlasmaSettings.StringProperty(attr="physicssubworld")
+    PlasmaSettings.StringProperty(attr="physicssndgroup")
 
     def draw(self,context):
         layout = self.layout
         view = context.object
         pl = view.plasma_settings
-        layout.prop(pl, "plPhysicsMass")
-        layout.prop(pl, "plPhysicsFriction")
-        layout.prop(pl, "plPhysicsRestitution")
+        layout.prop(pl, "physicsmass")
+        layout.prop(pl, "physicsfriction")
+        layout.prop(pl, "physicsrestitution")
         layout.label(text="SubWorld:")
-        layout.prop(pl, "plPhysicsSubWorld")
+        layout.prop(pl, "physicssubworld")
         layout.label(text="Sound Group:")
-        layout.prop(pl, "plPhysicsSndGroup")
+        layout.prop(pl, "physicssndgroup")
         layout.label(text="Bounds Type:")
-        layout.prop(pl, "plPhysicsBounds", text="")
+        layout.prop(pl, "physicsbounds", text="")
         
     def export(self,  blobject, plphysical):
-        plphysical.mass = blobject.plasma_settings.plPhysicsMass
-        plphysical.friction = blobject.plasma_settings.plPhysicsFriction
-        plphysical.restitution = blobject.plasma_settings.plPhysicsRestitution
+        plphysical.mass = blobject.plasma_settings.physicsmass
+        plphysical.friction = blobject.plasma_settings.physicsfriction
+        plphysical.restitution = blobject.plasma_settings.physicsrestitution
         #blobject.plPhysicsSubWorld
-        plphysical.boundsType = int(blobject.plasma_settings.plPhysicsBounds)
+        plphysical.boundsType = int(blobject.plasma_settings.physicsbounds)
 
 def register():
-    bpy.types.register(PHYSICS_PT_plasma)
+    bpy.types.register(Physical)
 
     
 def unregister():
-    bpy.types.unregister(PHYSICS_PT_plasma)
+    bpy.types.unregister(Physical)
