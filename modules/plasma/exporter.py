@@ -1,7 +1,10 @@
 import bpy
 from PyHSPlasma import *
 from bpy.props import *
-import modifiers
+import modifiers,geometry
+
+
+GeoMgr = geometry.GeometryManager()
 
 def convert_version(spv):
     if spv == "PVPRIME":
@@ -42,24 +45,33 @@ class PlasmaExportResourcePage(bpy.types.Operator):
                               ),
                               name="Plasma Version",
                               description="Plasma Engine Version",
-                              default="PVPOTS") #bpy.types.Window.
+                              default="PVPOTS")
 
     def execute(self, context):
+
         print("Exporting as prp...")
         rm = plResManager(convert_version(self.properties.version))
         i = 0
         loc = plLocation()
         loc.page = 0
         loc.prefix = i
-    
         ExportSceneNode(rm, loc, bpy.data.scenes[0])
+        #quicky mat
+        mat = hsGMaterial("mat")
+        rm.AddObject(loc,mat)
+        layer = plLayer("layer")
+        rm.AddObject(loc,layer)
+        mat.addLayer(layer.key)
+        #end of quicky mat
+        GeoMgr.FinallizeDSpans(0,mat)
         page = plPageInfo()
         page.location = loc
         page.age = "agename"
         page.page = bpy.data.scenes[0].name
         rm.AddPage(page)
-        #rm.WritePage(os.path.join(path,pageName)+'.prp', page)
+        print("Writing Page...")
         rm.WritePage(self.properties.path, page)
+        print("Export Complete")
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -70,11 +82,16 @@ class PlasmaExportResourcePage(bpy.types.Operator):
 def ExportSceneNode(rm,loc,blScn):
     node = plSceneNode(blScn.name)
     rm.AddObject(loc,node)
+
+    dspans = geometry.CreateDrawableSpans("agename",node,0,0)
+    rm.AddObject(loc,dspans)
+    GeoMgr.AddDrawableSpans(dspans)
+
     for blObj in blScn.objects:
         plScnObj = ExportSceneObject(rm, loc, blObj)
         node.addSceneObject(plScnObj.key)
     return node
-    
+
 
 def ExportSceneObject(rm,loc,blObj):
     print("[Exporting %s]"%blObj.name)
@@ -91,6 +108,8 @@ def ExportSceneObject(rm,loc,blObj):
 def ExportDrawInterface(rm,loc,blObj,so):
     di = plDrawInterface(blObj.name)
     di.owner = so.key
+    dspans,diind = GeoMgr.AddBlenderMeshToDSpans(0,blObj.data) #export our mesh
+    di.addDrawable(dspans.key,diind)
     rm.AddObject(loc,di)
     return di
 

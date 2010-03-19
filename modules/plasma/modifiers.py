@@ -28,7 +28,7 @@ def AddModifierFunc(modifiers,typestr):
     newmod.type = typestr
     print("Adding a %s"%newmod.type)
     if typestr == "waveset":
-        WavesetProps(newmod)
+        Waveset.CreateProps(newmod)
 
 class AddModifier(bpy.types.Operator):
     bl_idname = "object.pladdmodifier"
