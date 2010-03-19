@@ -3,7 +3,6 @@
 import bpy
 import headers
 import physics
-import material
 import modifiers
 
 hide = [
@@ -63,6 +62,8 @@ hide = [
 ]
 
 
+class PlasmaSettings(bpy.types.IDPropertyGroup):
+    pass
 
 def disable_panels():
     unregister = bpy.types.unregister
@@ -72,6 +73,7 @@ def disable_panels():
 def plRegister():
     #print("plNetMsgPong!")
     disable_panels()
+    bpy.types.register(PlasmaSettings)
     headers.register()
     physics.register()
     modifiers.register()

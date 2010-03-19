@@ -1,4 +1,4 @@
-from plasma_namespace import *
+import bpy
 from PyHSPlasma import *
 from bpy.props import *
 
@@ -41,6 +41,7 @@ class AddModifier(bpy.types.Operator):
                               description="Modifier Type")
     def execute(self, context):
         AddModifierFunc(context.object.plasma_settings.modifiers,self.properties.type)
+        context.object.plasma_settings.activemodifier = (len(context.object.plasma_settings.modifiers)-1)
         return {'FINISHED'}
 
     
@@ -62,10 +63,11 @@ class Modifiers(bpy.types.Panel):
     bl_region_type = 'WINDOW'
     bl_context = "modifier"
     bl_label = "Plasma Modifiers"
-    
-    bpy.types.Object.PointerProperty(attr="plasma_settings", type=PlasmaSettings, name="Plasma Settings", description="Plasma Engine Object Settings")
-    PlasmaSettings.CollectionProperty(attr="modifiers", type=PlasmaModifierSettings)
-    PlasmaSettings.IntProperty(attr="activemodifier",default=0)
+    def __init__(self, thing1):
+        bpy.types.Panel.__init__(self)
+        bpy.types.Object.PointerProperty(attr="plasma_settings", type=bpy.types.PlasmaSettings, name="Plasma Settings", description="Plasma Engine Object Settings")
+        bpy.types.PlasmaSettings.CollectionProperty(attr="modifiers", type=PlasmaModifierSettings)
+        bpy.types.PlasmaSettings.IntProperty(attr="activemodifier",default=0)
     def draw(self, context):
         layout = self.layout
 
