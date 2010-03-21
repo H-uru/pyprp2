@@ -26,7 +26,6 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
         v.normal = hsVector3(vert.normal[0],vert.normal[1], vert.normal[2])
         #add the stuff to the dict
         bufferverts[vert] = [v,vertcols,claimed_by_these_materials]
-        print(bufferverts[vert][0].pos.X)
     for i, face in enumerate(mesh.faces):
         matidx = face.material_index
         face_uvs = []
@@ -67,8 +66,6 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
                                round((rgbtotals[1]/float(len(vertcols)))*255.0),
                                round((rgbtotals[2]/float(len(vertcols)))*255.0),
                                255).color
-        print(vert.pos)
-
     for mati,mat in enumerate(mesh.materials):
         print("Material %s owns %i inds."%(mat.name,len(inds_by_material[mati])))
     return bufferverts,inds_by_material
@@ -122,6 +119,7 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         bufferGroupInd = dspans.createBufferGroup(bgformat)
         bginfo = BufferGroupInfo()
         buffergroupinfos.append(BufferGroupInfo())
+        print(self.dspans_list)
         # and return new index in list
         return bufferGroupInd
 
@@ -158,7 +156,6 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
             inds_offset = len(buffergroupinfos[buffergroup_index].inds_to_be_written)
             buffergroupinfos[buffergroup_index].verts_to_be_written.extend(verts)
             buffergroupinfos[buffergroup_index].inds_to_be_written.extend([i+vert_offset for i in inds])
-            #create the icicle, creating multiple icicles causes Blender to crash at prp-write time. O.o
             ice = plIcicle()
             ice.groupIdx = 0
             ice.VBufferIdx = buffergroup_index

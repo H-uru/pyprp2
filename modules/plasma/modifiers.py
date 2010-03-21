@@ -2,6 +2,12 @@ import bpy
 from PyHSPlasma import *
 from bpy.props import *
 
+def HasModifier(blmods,modtype):
+    for blmod in blmods:
+        if blmod.type == modtype:
+            return True
+    return False
+
 #so many static methods...
 class Waveset:
     def CreateProps(mod):

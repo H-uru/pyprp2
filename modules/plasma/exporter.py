@@ -6,6 +6,14 @@ import modifiers,geometry
 
 GeoMgr = geometry.GeometryManager()
 
+def blMatrix44_2_hsMatrix44(blmat):
+    hsmat = hsMatrix44()
+    for i in range(4):
+        for j in range(4):
+            hsmat[i,j] = blmat[j][i]
+    return hsmat
+    
+
 def convert_version(spv):
     if spv == "PVPRIME":
         return pvPrime
@@ -54,7 +62,7 @@ class PlasmaExportResourcePage(bpy.types.Operator):
         i = 0
         loc = plLocation()
         loc.page = 0
-        loc.prefix = i
+        loc.prefix = 299
         ExportSceneNode(rm, loc, bpy.data.scenes[0])
         #quicky mat
         mat = hsGMaterial("mat")
@@ -66,7 +74,7 @@ class PlasmaExportResourcePage(bpy.types.Operator):
         GeoMgr.FinallizeDSpans(0,mat)
         page = plPageInfo()
         page.location = loc
-        page.age = "agename"
+        page.age = "test_pyprp2"
         page.page = bpy.data.scenes[0].name
         rm.AddPage(page)
         print("Writing Page...")
@@ -83,7 +91,7 @@ def ExportSceneNode(rm,loc,blScn):
     node = plSceneNode(blScn.name)
     rm.AddObject(loc,node)
 
-    dspans = geometry.CreateDrawableSpans("agename",node,0,0)
+    dspans = geometry.CreateDrawableSpans("test_pyprp2",node,0,0)
     rm.AddObject(loc,dspans)
     GeoMgr.AddDrawableSpans(dspans)
 
@@ -96,14 +104,37 @@ def ExportSceneNode(rm,loc,blScn):
 def ExportSceneObject(rm,loc,blObj):
     print("[Exporting %s]"%blObj.name)
     so = plSceneObject(blObj.name)
-
     so.sceneNode = rm.getSceneNode(loc).key
+    hasCI = False
+    modifiers.Modifiers.Export(rm, loc, blObj.plasma_settings.modifiers,so)
+    if modifiers.HasModifier(blObj.plasma_settings.modifiers, "spawn"):
+        hasCI = True #mods force things on here
+
+    if hasCI:
+        print("With CI")
+        so.coord = ExportCoordInterface(rm,loc,blObj,so).key
+    #get down to object types
     if blObj.type == "MESH":
         print("    as a mesh")
         so.draw = ExportDrawInterface(rm,loc,blObj,so).key
-    modifiers.Modifiers.Export(rm, loc, blObj.plasma_settings.modifiers,so)
     rm.AddObject(loc, so)
     return so
+
+def ExportCoordInterface(rm,loc,blObj,so):
+    ci = plCoordinateInterface(blObj.name)
+    ci.owner = so.key
+    #matrix fun
+    l2w = blMatrix44_2_hsMatrix44(blObj.matrix)
+    ci.localToWorld = l2w
+    ci.localToParent = l2w
+    matcopy = blObj.matrix.__copy__()
+    matcopy.invert()
+    w2l = blMatrix44_2_hsMatrix44(matcopy)
+    ci.worldToLocal = w2l
+    ci.parentToLocal = w2l
+    
+    rm.AddObject(loc,ci)
+    return ci
 
 def ExportDrawInterface(rm,loc,blObj,so):
     di = plDrawInterface(blObj.name)
