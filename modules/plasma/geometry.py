@@ -157,11 +157,9 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
             buffergroupinfos[buffergroup_index].verts_to_be_written.extend(verts)
             buffergroupinfos[buffergroup_index].inds_to_be_written.extend([i+vert_offset for i in inds])
             ice = plIcicle()
-            ice.groupIdx = 0
-            ice.VBufferIdx = buffergroup_index
+            ice.groupIdx = buffergroup_index
             ice.VLength = len(verts)
             ice.VStartIdx = vert_offset
-            ice.IBufferIdx = buffergroup_index
             ice.ILength = len(inds)
             ice.IStartIdx = inds_offset
             ice.materialIdx = 0 #point to our dummy material for now.
