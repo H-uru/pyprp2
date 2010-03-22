@@ -1,6 +1,26 @@
 import bpy
 from PyHSPlasma import *
 
+def transform_vector3_by_blmat(vector,m):
+    x = m[0][0]*vector[0] + m[0][1]*vector[1] + m[0][2]*vector[2] + m[0][3]
+    y = m[1][0]*vector[0] + m[1][1]*vector[1] + m[1][2]*vector[2] + m[1][3]
+    z = m[2][0]*vector[0] + m[2][1]*vector[1] + m[2][2]*vector[2] + m[2][3]
+    return [x,y,z]
+
+def transform_vector3_by_plmat(vector,m):
+    x = m[0, 0]*vector[0] + m[1, 0]*vector[1] + m[2, 0]*vector[2] + m[3, 0]
+    y = m[0, 1]*vector[0] + m[1, 1]*vector[1] + m[2, 1]*vector[2] + m[3, 1]
+    z = m[0, 2]*vector[0] + m[1, 2]*vector[1] + m[2, 2]*vector[2] + m[3, 2]
+    return [x,y,z]
+
+def blMatrix44_2_hsMatrix44(blmat):
+    hsmat = hsMatrix44()
+    for i in range(4):
+        for j in range(4):
+            hsmat[i,j] = blmat[j][i]
+    return hsmat
+
+
 
 def DigestBlMesh(mesh): #Let's hope for no indigestion.
     vertex_color = mesh.vertex_colors.get("Col")
@@ -70,16 +90,42 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
         print("Material %s owns %i inds."%(mat.name,len(inds_by_material[mati])))
     return bufferverts,inds_by_material
 
-def GetPlasmaVertsAndIndsByMaterial(bufferverts, inds_by_material, material_index):
+def GetPlasmaVertsIndsBoundsByMaterial(bufferverts, inds_by_material, material_index):
     pointerinds = inds_by_material[material_index]
     verts = []
+    lboundsmin=None # maximum vertex
+    lboundsmax=None # minimum vertex
+            
     for vert in bufferverts.values(): #we don't need the blvert keying here
         if material_index in vert[2]: #vert[2] is claimed_by_these_materials
-            verts.append(vert[0]) #the plasma vertex
+            verts.append(vert[0]) #add plasma vert to our sack of presents
+            #sneak some bounds creation in here
+            vertpos = vert[0].pos
+            if lboundsmin is None or lboundsmax is None:
+                lboundsmin = [vertpos.X,vertpos.Y,vertpos.Z]
+                lboundsmax = [vertpos.X,vertpos.Y,vertpos.Z]
+            else:
+                #the min
+                if vertpos.X < lboundsmin[0]:
+                    lboundsmin[0] = vertpos.X
+                if vertpos.Y < lboundsmin[1]:
+                    lboundsmin[1] = vertpos.Y
+                if vertpos.Z < lboundsmin[2]:
+                    lboundsmin[2] = vertpos.Z
+                #now the max
+                if vertpos.X > lboundsmax[0]:
+                    lboundsmax[0] = vertpos.X
+                if vertpos.Y > lboundsmax[1]:
+                    lboundsmax[1] = vertpos.Y
+                if vertpos.Z > lboundsmax[2]:
+                    lboundsmax[2] = vertpos.Z
+    if lboundsmin is None or lboundsmax is None:
+        lboundsmin = [0.0,0.0,0.0]
+        lboundsmax = [0.0,0.0,0.0]
     inds = []
     for ind in pointerinds:
         inds.append(verts.index(ind))
-    return verts, inds
+    return verts, inds, (lboundsmin,lboundsmax)
 
 def CreateDrawableSpans(agename,scenenode,renderlevel,criteria):
     spanlabel = "Spans"
@@ -108,6 +154,8 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         return len(self.dspans_list)-1
     
     def FindOrCreateBufferGroup(self, dspansind, UVCount,num_vertexs):
+        if num_vertexs >= 0x8000:
+            raise Exception("Too many verts.")
         dspans,buffergroupinfos = self.dspans_list[dspansind]
         for idx in range(len(dspans.bufferGroups)):
             bufferGroup=dspans.bufferGroups[idx]
@@ -119,7 +167,6 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         bufferGroupInd = dspans.createBufferGroup(bgformat)
         bginfo = BufferGroupInfo()
         buffergroupinfos.append(BufferGroupInfo())
-        print(self.dspans_list)
         # and return new index in list
         return bufferGroupInd
 
@@ -138,14 +185,16 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
             cell.length = len(bginfo.verts_to_be_written)
             bg.addCells([cell])
             
-    def AddBlenderMeshToDSpans(self, dspansind, mesh):
+    def AddBlenderMeshToDSpans(self, dspansind, blObj, hasCI):
+        mesh = blObj.data
         dspans,buffergroupinfos = self.dspans_list[dspansind]
         bufferverts,inds_by_material = DigestBlMesh(mesh)
         icicle_inds = []
     
         for matindex in inds_by_material:
             print("Adding geometry associated with %s"%mesh.materials[matindex].name)
-            verts, inds = GetPlasmaVertsAndIndsByMaterial(bufferverts, inds_by_material, matindex)
+            verts, inds, bounds = GetPlasmaVertsIndsBoundsByMaterial(bufferverts, inds_by_material, matindex)
+            print("  Bounds:",bounds)
             print("  Verts: %i"%len(verts))
             print("  UVW layers: %i"%len(mesh.uv_textures))
             buffergroup_index = self.FindOrCreateBufferGroup(dspansind,len(mesh.uv_textures),len(verts))
@@ -156,7 +205,37 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
             inds_offset = len(buffergroupinfos[buffergroup_index].inds_to_be_written)
             buffergroupinfos[buffergroup_index].verts_to_be_written.extend(verts)
             buffergroupinfos[buffergroup_index].inds_to_be_written.extend([i+vert_offset for i in inds])
+            #create our icicle
             ice = plIcicle()
+            #transformations
+            if hasCI:
+                #just put some identities in
+                ice.localToWorld = hsMatrix44()
+                ice.worldToLocal = hsMatrix44()
+            else:
+                #we need the transform
+                l2w = blMatrix44_2_hsMatrix44(blObj.matrix)
+                ice.localToWorld = l2w
+                matcopy = blObj.matrix.__copy__()
+                matcopy.invert()
+                w2l = blMatrix44_2_hsMatrix44(matcopy)
+                ice.worldToLocal = w2l
+            #bounds stuff
+            #local bounds, the easy ones
+            lbounds = hsBounds3Ext()
+            lbounds.mins = hsVector3(bounds[0][0],bounds[0][1],bounds[0][2])
+            lbounds.maxs = hsVector3(bounds[1][0],bounds[1][1],bounds[1][2])
+            lbounds.flags = hsBounds3Ext.kAxisAligned
+            ice.localBounds = lbounds
+            #world bounds, slightly harder
+            wbounds = hsBounds3Ext()
+            minwbounds = transform_vector3_by_plmat(bounds[0], ice.localToWorld)
+            maxwbounds = transform_vector3_by_plmat(bounds[1], ice.localToWorld)
+            wbounds.mins = hsVector3(minwbounds[0],minwbounds[1],minwbounds[2])
+            wbounds.maxs = hsVector3(maxwbounds[0],maxwbounds[1],maxwbounds[2])
+            wbounds.flags = hsBounds3Ext.kAxisAligned
+            ice.worldBounds = wbounds
+            #buffergroup stuff
             ice.groupIdx = buffergroup_index
             ice.VLength = len(verts)
             ice.VStartIdx = vert_offset
@@ -165,7 +244,7 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
             ice.materialIdx = 0 #point to our dummy material for now.
             dspans.addIcicle(ice)
             icicle_inds.append(len(dspans.spans)-1)
-            
+        #deal with the DIIndex
         di_ind_obj = plDISpanIndex()
         di_ind_obj.indices = icicle_inds
         dspans.addDIIndex(di_ind_obj)

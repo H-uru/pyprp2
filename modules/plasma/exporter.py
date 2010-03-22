@@ -5,13 +5,6 @@ import modifiers,geometry
 
 
 GeoMgr = geometry.GeometryManager()
-
-def blMatrix44_2_hsMatrix44(blmat):
-    hsmat = hsMatrix44()
-    for i in range(4):
-        for j in range(4):
-            hsmat[i,j] = blmat[j][i]
-    return hsmat
     
 
 def convert_version(spv):
@@ -106,9 +99,14 @@ def ExportSceneObject(rm,loc,blObj):
     so = plSceneObject(blObj.name)
     so.sceneNode = rm.getSceneNode(loc).key
     hasCI = False
-    modifiers.Modifiers.Export(rm, loc, blObj.plasma_settings.modifiers,so)
-    if modifiers.HasModifier(blObj.plasma_settings.modifiers, "spawn"):
-        hasCI = True #mods force things on here
+    try:
+        blmods = blObj.plasma_settings.modifiers
+    except:
+        blmods = None
+    if blmods:
+        modifiers.Modifiers.Export(rm, loc, blmods,so)
+        if modifiers.HasModifier(blmods, "spawn"):
+            hasCI = True #mods force things on here
 
     if hasCI:
         print("With CI")
@@ -116,7 +114,7 @@ def ExportSceneObject(rm,loc,blObj):
     #get down to object types
     if blObj.type == "MESH":
         print("    as a mesh")
-        so.draw = ExportDrawInterface(rm,loc,blObj,so).key
+        so.draw = ExportDrawInterface(rm,loc,blObj,so,hasCI).key
     rm.AddObject(loc, so)
     return so
 
@@ -124,22 +122,22 @@ def ExportCoordInterface(rm,loc,blObj,so):
     ci = plCoordinateInterface(blObj.name)
     ci.owner = so.key
     #matrix fun
-    l2w = blMatrix44_2_hsMatrix44(blObj.matrix)
+    l2w = geometry.blMatrix44_2_hsMatrix44(blObj.matrix)
     ci.localToWorld = l2w
     ci.localToParent = l2w
     matcopy = blObj.matrix.__copy__()
     matcopy.invert()
-    w2l = blMatrix44_2_hsMatrix44(matcopy)
+    w2l = geometry.blMatrix44_2_hsMatrix44(matcopy)
     ci.worldToLocal = w2l
     ci.parentToLocal = w2l
     
     rm.AddObject(loc,ci)
     return ci
 
-def ExportDrawInterface(rm,loc,blObj,so):
+def ExportDrawInterface(rm,loc,blObj,so, hasCI):
     di = plDrawInterface(blObj.name)
     di.owner = so.key
-    dspans,diind = GeoMgr.AddBlenderMeshToDSpans(0,blObj.data) #export our mesh
+    dspans,diind = GeoMgr.AddBlenderMeshToDSpans(0,blObj, hasCI) #export our mesh
     di.addDrawable(dspans.key,diind)
     rm.AddObject(loc,di)
     return di
