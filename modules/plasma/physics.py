@@ -1,5 +1,19 @@
 import bpy
+from PyHSPlasma import *
 
+def BuildProxyBounds(blObj):
+    verts = []
+    inds = []
+    for face in blObj.data.faces:
+        if len(face.verts) == 3:
+            inds.extend([face.verts[0],face.verts[1],face.verts[2]])
+        elif len(face.verts) == 4:
+            inds.extend([face.verts[0],face.verts[1],face.verts[2]])
+            inds.extend([face.verts[0],face.verts[2],face.verts[3]])
+    for vert in blObj.data.verts:
+        verts.append(hsVector3(vert.co[0],vert.co[1],vert.co[2]))
+    return verts, inds
+    
 class Physical(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -9,7 +23,8 @@ class Physical(bpy.types.Panel):
         bpy.types.Panel.__init__(self)
         #I hope recreating this type isn't too much of a hit.  If there's a way to get context passed to the creator it could test for if it's there.
         bpy.types.Object.PointerProperty(attr="plasma_settings", type=bpy.types.PlasmaSettings, name="Plasma Settings", description="Plasma Engine Object Settings")
-
+        
+        bpy.types.PlasmaSettings.BoolProperty(attr="physicsenabled",name="Physics Enabled", default=False)
         bpy.types.PlasmaSettings.FloatProperty(attr="physicsmass",name="Mass",default=0.0,soft_min=0,soft_max=1000)
         bpy.types.PlasmaSettings.FloatProperty(attr="physicsfriction",name="Friction",default=0.0,soft_min=0,soft_max=1000)
         bpy.types.PlasmaSettings.FloatProperty(attr="physicsrestitution",name="Restitution",default=0.0,soft_min=0,soft_max=1000)
@@ -27,11 +42,19 @@ class Physical(bpy.types.Panel):
                                   default="3")
         bpy.types.PlasmaSettings.StringProperty(attr="physicssubworld")
         bpy.types.PlasmaSettings.StringProperty(attr="physicssndgroup")
+        bpy.types.PlasmaSettings.FloatProperty(attr="physicsradius",name="Radius",default=1.0,soft_min=0,soft_max=1000)
+
+    def draw_header(self, context):
+        view = context.object
+        pl = view.plasma_settings
+        self.layout.prop(pl, "physicsenabled", text="")
 
     def draw(self,context):
         layout = self.layout
         view = context.object
         pl = view.plasma_settings
+        layout.active = pl.physicsenabled
+        
         layout.prop(pl, "physicsmass")
         layout.prop(pl, "physicsfriction")
         layout.prop(pl, "physicsrestitution")
@@ -41,13 +64,26 @@ class Physical(bpy.types.Panel):
         layout.prop(pl, "physicssndgroup")
         layout.label(text="Bounds Type:")
         layout.prop(pl, "physicsbounds", text="")
-        
-    def export(self,  blobject, plphysical):
-        plphysical.mass = blobject.plasma_settings.physicsmass
-        plphysical.friction = blobject.plasma_settings.physicsfriction
-        plphysical.restitution = blobject.plasma_settings.physicsrestitution
-        #blobject.plPhysicsSubWorld
-        plphysical.boundsType = int(blobject.plasma_settings.physicsbounds)
+        if pl.physicsbounds == "2":
+            layout.prop(pl, "physicsradius")
+        if pl.physicsbounds not in ["2","4"]:
+            layout.label(text="bounds type currently unsupported")
+
+    def Export(rm,loc,blObj,so):
+        plphysical = plGenericPhysical(blObj.name)
+        plphysical.sceneNode = rm.getSceneNode(loc).key
+        plphysical.object = so.key
+        plphysical.mass = blObj.plasma_settings.physicsmass
+        plphysical.friction = blObj.plasma_settings.physicsfriction
+        plphysical.restitution = blObj.plasma_settings.physicsrestitution
+        plphysical.boundsType = int(blObj.plasma_settings.physicsbounds)
+        if plphysical.boundsType == plSimDefs.kSphereBounds: #sphere
+             plphysical.radius = blObj.plasma_settings.physicsradius
+        elif plphysical.boundsType == plSimDefs.kProxyBounds: #proxy
+            plphysical.verts, plphysical.indices = BuildProxyBounds(blObj) #do a little odd-looking compact python code
+        rm.AddObject(loc,plphysical)
+        return plphysical
+    Export = staticmethod(Export)
 
 def register():
     bpy.types.register(Physical)

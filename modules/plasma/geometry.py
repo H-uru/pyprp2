@@ -127,13 +127,13 @@ def GetPlasmaVertsIndsBoundsByMaterial(bufferverts, inds_by_material, material_i
         inds.append(verts.index(ind))
     return verts, inds, (lboundsmin,lboundsmax)
 
-def CreateDrawableSpans(agename,scenenode,renderlevel,criteria):
+def CreateDrawableSpans(agename,scenenode,renderlevel,criteria,pagename):
     spanlabel = "Spans"
     if renderlevel > 0: #it's a blend
         spanlabel = "BlendSpans"
     one="%08x" % renderlevel
     two="%x" % criteria
-    name = "%s_District_%s_%08x_%x%s"%(agename, scenenode.key.name, renderlevel, criteria, spanlabel)
+    name = "%s_District_%s_%08x_%x%s"%(agename, pagename, renderlevel, criteria, spanlabel)
     dspans = plDrawableSpans(name)
     dspans.sceneNode = scenenode.key
     dspans.renderLevel = renderlevel

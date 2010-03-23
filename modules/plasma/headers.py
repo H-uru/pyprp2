@@ -10,8 +10,8 @@ class INFO_MT_plasma(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         layout.operator_context = 'EXEC_AREA'
-        layout.operator("export.plasmaexportprp", text="Export Prp")
-        layout.operator("wm.exit_blender", text="Quit", icon='QUIT')
+        layout.operator_menu_enum("export.plasmaexport","type", text="Export")
+        #keeping this from being just export for if there's some tool we want in this menu
 
 
 class INFO_HT_header_plasma(space_info.INFO_HT_header):
@@ -51,12 +51,14 @@ class INFO_HT_header_plasma(space_info.INFO_HT_header):
 def register():
     bpy.types.register(INFO_MT_plasma)
     bpy.types.register(INFO_HT_header_plasma)
-    bpy.types.register(exporter.PlasmaExportPrp)
+    bpy.types.register(exporter.PlasmaExport)
     bpy.types.register(exporter.PlasmaExportResourcePage)
-
+    bpy.types.register(exporter.PlasmaExportAge)
     
 def unregister():
     bpy.types.unregister(INFO_MT_plasma)
     bpy.types.unregister(INFO_HT_header_plasma)
-    bpy.types.unregister(exporter.PlasmaExportPrp)
+    bpy.types.unregister(exporter.PlasmaExport)
     bpy.types.unregister(exporter.PlasmaExportResourcePage)
+    bpy.types.unregister(exporter.PlasmaExportAge)
+
