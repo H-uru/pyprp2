@@ -4,8 +4,8 @@ from bpy.props import *
 import modifiers,geometry,physics
 
 
-GeoMgr = geometry.GeometryManager()
-    
+GeoMgr = None #uhg, going to try to get rid of this global var at some point
+
 
 def convert_version(spv):
     if spv == "PVPRIME":
@@ -20,6 +20,9 @@ def convert_version(spv):
         return pvHex
 
 def export_scene_as_prp(rm, loc, blscene, agename, path):
+    global GeoMgr
+    GeoMgr = geometry.GeometryManager()
+    
     ExportSceneNode(rm, loc, blscene,blscene.name,agename)
     #quicky mat
     mat = hsGMaterial("mat")
@@ -37,9 +40,7 @@ def export_scene_as_prp(rm, loc, blscene, agename, path):
     fullpagename = "%s_District_%s.prp"%(page.age, page.page)
     print("Writing Page %s"%fullpagename)
     rm.WritePage(path, page)
-
-        
-
+    GeoMgr = None #clean up
 
 class PlasmaExportAge(bpy.types.Operator):
     '''Export as Plasma Age'''
