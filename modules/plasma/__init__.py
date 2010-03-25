@@ -4,6 +4,7 @@ import bpy
 import headers
 import physics
 import modifiers
+import world
 
 hide = [
     bpy.types.CLOTH_MT_presets,
@@ -77,5 +78,5 @@ def plRegister():
     headers.register()
     physics.register()
     modifiers.register()
-
+    world.register()
    

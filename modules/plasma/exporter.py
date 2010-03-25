@@ -2,10 +2,20 @@ import bpy
 from PyHSPlasma import *
 from bpy.props import *
 import modifiers,geometry,physics
-
+import os
 
 GeoMgr = None #uhg, going to try to get rid of this global var at some point
 
+def readConfig(filepath): #tiny little parser
+    file = open(filepath)
+    lines = file.readlines()
+    file.close()
+    info = {}
+    for line in lines:
+        line = line.strip("\n")
+        key,value = line.split("=")
+        info[key] = value
+    return info
 
 def convert_version(spv):
     if spv == "PVPRIME":
@@ -39,7 +49,7 @@ def export_scene_as_prp(rm, loc, blscene, agename, path):
     rm.AddPage(page)
     fullpagename = "%s_District_%s.prp"%(page.age, page.page)
     print("Writing Page %s"%fullpagename)
-    rm.WritePage(path, page)
+    rm.WritePage(os.path.join(path,fullpagename), page)
     GeoMgr = None #clean up
 
 class PlasmaExportAge(bpy.types.Operator):
@@ -47,30 +57,47 @@ class PlasmaExportAge(bpy.types.Operator):
     bl_idname = "export.plasmaage"
     bl_label = "Export Age"
 
-    filename = StringProperty(name="File Name")
-    directory = StringProperty(name="Directory")
-    path = StringProperty(name="Directory", description="Directory used for exporting the Age", maxlen= 1024, default= "")
-    use_setting = BoolProperty(name="Example Boolean", description="Example Tooltip", default= True)
-
-    version = bpy.props.EnumProperty(attr="plasma_version",
-                              items=(
-                                  ("PVPRIME", "Plasma 2.0 (59.11)", "Ages Beyond Myst, To D'ni, Untìl Uru"),
-                                  ("PVPOTS", "Plasma 2.0 (59.12)", "Path of the Shell, Complete  Chronicles"),
-                                  ("PVLIVE", "Plasma 2.0 (70.9)", "Myst Online: Uru Live, MOULagain, MagiQuest Online"),
-                                  ("PVEOA", "Plasma 2.1", "End of Ages, Crowthistle"),
-                                  ("PVHEX", "Plasma 3.0", "HexIsle")
-                              ),
-                              name="Plasma Version",
-                              description="Plasma Engine Version",
-                              default="PVPOTS")
-
     def execute(self, context):
-        raise Exception("not implemented yet")
+        dotblenderpath = bpy.utils.home_paths()[1]
+        confdata = readConfig(os.path.join(dotblenderpath,"pyprp"))
+        exportpath = confdata.get("exportpath")
+        if exportpath == None:
+            raise Exception("Can't find variable exportpath in config.")
+        if len(bpy.data.worlds) > 1:
+            raise Exception("Multiple worlds have been detected, please delete all except one of them to continue.")
+        try:
+            plsettings = bpy.data.worlds[0].plasma_settings
+        except:
+            raise Exception("Please go take a look at your world settings.  That's the little globe button.")
+
+        #f = open(os.path.join(exportpath,"testfile.age"),"w")
+        #f.write("test")
+        #f.close()
+            
+        agename = plsettings.agename
+        pversion = convert_version(plsettings.plasmaversion)
+        rm = plResManager(pversion)
+        ageinfo = plAgeInfo()
+        ageinfo.name = agename
+        ageinfo.dayLength = plsettings.daylength
+        ageinfo.seqPrefix = plsettings.ageprefix
+        ageinfo.maxCapacity = plsettings.maxcapacity
+        ageinfo.lingerTime = plsettings.lingertime
+        ageinfo.releaseVersion = plsettings.releaseversion
+        if plsettings.startdaytime > 0:
+            ageinfo.startDayTime = plsettings.startdaytime
+        
+        for i, scene in enumerate(bpy.data.scenes,1):
+            loc = plLocation()
+            loc.page = i
+            loc.prefix = plsettings.ageprefix
+            export_scene_as_prp(rm, loc, scene, agename, exportpath)
+            ageinfo.addPage((scene.name,i,0))
+        print("Writing age file to %s"%os.path.join(exportpath,agename+".age"))
+        ageinfo.writeToFile(os.path.join(exportpath,agename+".age"), pversion)
+        print("Export Complete")
+        
         return {'FINISHED'}
-    def invoke(self, context, event):
-        wm = context.manager
-        wm.add_fileselect(self) # will run self.execute()
-        return {'RUNNING_MODAL'}
 
 class PlasmaExportResourcePage(bpy.types.Operator):
     '''Export as Plasma Resource Page'''
@@ -96,12 +123,20 @@ class PlasmaExportResourcePage(bpy.types.Operator):
 
     def execute(self, context):
         print("Exporting as prp...")
-        agename = "test_pyprp2"
+        if len(bpy.data.worlds) > 1:
+            raise Exception("Multiple worlds have been detected, please delete all except one of them to continue.")
+        
+        try:
+            plsettings = bpy.data.worlds[0].plasma_settings
+        except:
+            raise Exception("Please go take a look at your world settings.  That's the little globe button.")
+        
+        agename = plsettings.agename
         rm = plResManager(convert_version(self.properties.version))
         i = 0
         loc = plLocation()
         loc.page = 0
-        loc.prefix = 299
+        loc.prefix = plsettings.ageprefix
         export_scene_as_prp(rm, loc, bpy.data.scenes[0], agename, self.properties.path)
         print("Export Complete")
         return {'FINISHED'}
@@ -121,7 +156,7 @@ class PlasmaExport(bpy.types.Operator):
                               description="Export Type")
     def execute(self, context):
         if self.properties.type == "age":
-            bpy.ops.export.plasmaage('INVOKE_DEFAULT', path="/")
+            bpy.ops.export.plasmaage()
         elif self.properties.type == "prp":
             bpy.ops.export.plasmaprp('INVOKE_DEFAULT', path="/")
         return {'FINISHED'}
