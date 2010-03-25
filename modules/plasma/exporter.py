@@ -87,7 +87,7 @@ class PlasmaExportAge(bpy.types.Operator):
         if plsettings.startdaytime > 0:
             ageinfo.startDayTime = plsettings.startdaytime
         
-        for i, scene in enumerate(bpy.data.scenes,1):
+        for i, scene in enumerate(bpy.data.scenes):
             loc = plLocation()
             loc.page = i
             loc.prefix = plsettings.ageprefix
