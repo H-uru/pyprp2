@@ -1,10 +1,10 @@
 # PyPlasma init
 
 import bpy
-import headers
-import physics
-import modifiers
-import world
+from plasma import headers
+from plasma import physics
+from plasma import modifiers
+from plasma import world
 
 hide = [
     bpy.types.CLOTH_MT_presets,
@@ -76,7 +76,7 @@ def plRegister():
     disable_panels()
     bpy.types.register(PlasmaSettings)
     headers.register()
-    physics.register()
     modifiers.register()
+    physics.register()
     world.register()
    

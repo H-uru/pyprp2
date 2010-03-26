@@ -1,7 +1,10 @@
 import bpy
 from PyHSPlasma import *
 from bpy.props import *
-import modifiers,geometry,physics
+from plasma import modifiers
+from plasma import geometry
+from plasma import physics
+from plasma import utils
 import os
 
 GeoMgr = None #uhg, going to try to get rid of this global var at some point
@@ -38,6 +41,10 @@ def export_scene_as_prp(rm, loc, blscene, agename, path):
     mat = hsGMaterial("mat")
     rm.AddObject(loc,mat)
     layer = plLayer("layer")
+    layer.runtime = hsColorRGBA.kWhite
+    layer.preshade = hsColorRGBA.kWhite
+    layer.ambient = hsColorRGBA.kBlack
+    layer.specular = hsColorRGBA.kBlack
     rm.AddObject(loc,layer)
     mat.addLayer(layer.key)
     #end of quicky mat
@@ -212,12 +219,12 @@ def ExportCoordInterface(rm,loc,blObj,so):
     ci = plCoordinateInterface(blObj.name)
     ci.owner = so.key
     #matrix fun
-    l2w = geometry.blMatrix44_2_hsMatrix44(blObj.matrix)
+    l2w = utils.blMatrix44_2_hsMatrix44(blObj.matrix)
     ci.localToWorld = l2w
     ci.localToParent = l2w
     matcopy = blObj.matrix.__copy__()
     matcopy.invert()
-    w2l = geometry.blMatrix44_2_hsMatrix44(matcopy)
+    w2l = utils.blMatrix44_2_hsMatrix44(matcopy)
     ci.worldToLocal = w2l
     ci.parentToLocal = w2l
     

@@ -8,8 +8,7 @@ class AgeSettings(bpy.types.Panel):
     bl_region_type = 'WINDOW'
     bl_context = "world"
     bl_label = "Plasma Age"
-    def __init__(self, thing1):
-        bpy.types.Panel.__init__(self)
+    def InitProperties():
         bpy.types.World.PointerProperty(attr="plasma_settings", type=bpy.types.PlasmaSettings, name="Plasma Settings", description="Plasma Engine Object Settings")
         
         bpy.types.PlasmaSettings.StringProperty(attr="agename", name="Age Name")
@@ -33,7 +32,7 @@ class AgeSettings(bpy.types.Panel):
         bpy.types.PlasmaSettings.IntProperty(attr="maxcapacity", name="Max Capacity", default=150, soft_min=0, soft_max=1000)
         bpy.types.PlasmaSettings.IntProperty(attr="lingertime", name="Linger Time", default=180, soft_min=0)
         bpy.types.PlasmaSettings.IntProperty(attr="releaseversion", name="Release Version", default=0, soft_min=0)        
-
+    InitProperties = staticmethod(InitProperties)
     def draw(self,context):
         layout = self.layout
         view = context.world
@@ -55,6 +54,7 @@ class AgeSettings(bpy.types.Panel):
             layout.prop(pl, "releaseversion")
 
 def register():
+    AgeSettings.InitProperties()
     bpy.types.register(AgeSettings)
 
     

@@ -1,5 +1,6 @@
 import bpy
 from PyHSPlasma import *
+from plasma import utils
 
 def BuildProxyBounds(blObj):
     verts = []
@@ -11,7 +12,8 @@ def BuildProxyBounds(blObj):
             inds.extend([face.verts[0],face.verts[1],face.verts[2]])
             inds.extend([face.verts[0],face.verts[2],face.verts[3]])
     for vert in blObj.data.verts:
-        verts.append(hsVector3(vert.co[0],vert.co[1],vert.co[2]))
+        x,y,z = utils.transform_vector3_by_blmat((vert.co[0],vert.co[1],vert.co[2]),blObj.matrix)
+        verts.append(hsVector3(x,y,z))
     return verts, inds
     
 class Physical(bpy.types.Panel):
@@ -19,15 +21,14 @@ class Physical(bpy.types.Panel):
     bl_region_type = 'WINDOW'
     bl_context = "physics"
     bl_label = "Plasma Physical"
-    def __init__(self, thing1):
-        bpy.types.Panel.__init__(self)
+    def InitProperties():
         #I hope recreating this type isn't too much of a hit.  If there's a way to get context passed to the creator it could test for if it's there.
         bpy.types.Object.PointerProperty(attr="plasma_settings", type=bpy.types.PlasmaSettings, name="Plasma Settings", description="Plasma Engine Object Settings")
         
         bpy.types.PlasmaSettings.BoolProperty(attr="physicsenabled",name="Physics Enabled", default=False)
         bpy.types.PlasmaSettings.FloatProperty(attr="physicsmass",name="Mass",default=0.0,soft_min=0,soft_max=1000)
-        bpy.types.PlasmaSettings.FloatProperty(attr="physicsfriction",name="Friction",default=0.0,soft_min=0,soft_max=1000)
-        bpy.types.PlasmaSettings.FloatProperty(attr="physicsrestitution",name="Restitution",default=0.0,soft_min=0,soft_max=1000)
+        bpy.types.PlasmaSettings.FloatProperty(attr="physicsfriction",name="Friction",default=0.0,soft_min=0,soft_max=10)
+        bpy.types.PlasmaSettings.FloatProperty(attr="physicsrestitution",name="Restitution",default=-1.0,soft_min=-1.0,soft_max=1000)
         bpy.types.PlasmaSettings.EnumProperty(attr="physicsbounds",
                                   items=(
                                       ("1", "Box", ""),
@@ -43,7 +44,7 @@ class Physical(bpy.types.Panel):
         bpy.types.PlasmaSettings.StringProperty(attr="physicssubworld")
         bpy.types.PlasmaSettings.StringProperty(attr="physicssndgroup")
         bpy.types.PlasmaSettings.FloatProperty(attr="physicsradius",name="Radius",default=1.0,soft_min=0,soft_max=1000)
-
+    InitProperties = staticmethod(InitProperties)
     def draw_header(self, context):
         view = context.object
         pl = view.plasma_settings
@@ -73,6 +74,10 @@ class Physical(bpy.types.Panel):
         plphysical = plGenericPhysical(blObj.name)
         plphysical.sceneNode = rm.getSceneNode(loc).key
         plphysical.object = so.key
+        plphysical.category = 0x02000000
+        plphysical.pos = hsVector3(0.0, 0.0, 0.0)
+        plphysical.rot = hsQuat(0.0, 0.0, 1.0, 0.0)
+        plphysical.LOSDBs = 0x44
         plphysical.mass = blObj.plasma_settings.physicsmass
         plphysical.friction = blObj.plasma_settings.physicsfriction
         plphysical.restitution = blObj.plasma_settings.physicsrestitution
@@ -86,6 +91,7 @@ class Physical(bpy.types.Panel):
     Export = staticmethod(Export)
 
 def register():
+    Physical.InitProperties()
     bpy.types.register(Physical)
 
     

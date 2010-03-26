@@ -1,26 +1,6 @@
 import bpy
 from PyHSPlasma import *
-
-def transform_vector3_by_blmat(vector,m):
-    x = m[0][0]*vector[0] + m[0][1]*vector[1] + m[0][2]*vector[2] + m[0][3]
-    y = m[1][0]*vector[0] + m[1][1]*vector[1] + m[1][2]*vector[2] + m[1][3]
-    z = m[2][0]*vector[0] + m[2][1]*vector[1] + m[2][2]*vector[2] + m[2][3]
-    return [x,y,z]
-
-def transform_vector3_by_plmat(vector,m):
-    x = m[0, 0]*vector[0] + m[1, 0]*vector[1] + m[2, 0]*vector[2] + m[3, 0]
-    y = m[0, 1]*vector[0] + m[1, 1]*vector[1] + m[2, 1]*vector[2] + m[3, 1]
-    z = m[0, 2]*vector[0] + m[1, 2]*vector[1] + m[2, 2]*vector[2] + m[3, 2]
-    return [x,y,z]
-
-def blMatrix44_2_hsMatrix44(blmat):
-    hsmat = hsMatrix44()
-    for i in range(4):
-        for j in range(4):
-            hsmat[i,j] = blmat[j][i]
-    return hsmat
-
-
+from plasma import utils
 
 def DigestBlMesh(mesh): #Let's hope for no indigestion.
     vertex_color = mesh.vertex_colors.get("Col")
@@ -214,11 +194,11 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
                 ice.worldToLocal = hsMatrix44()
             else:
                 #we need the transform
-                l2w = blMatrix44_2_hsMatrix44(blObj.matrix)
+                l2w = utils.blMatrix44_2_hsMatrix44(blObj.matrix)
                 ice.localToWorld = l2w
                 matcopy = blObj.matrix.__copy__()
                 matcopy.invert()
-                w2l = blMatrix44_2_hsMatrix44(matcopy)
+                w2l = utils.blMatrix44_2_hsMatrix44(matcopy)
                 ice.worldToLocal = w2l
             #bounds stuff
             #local bounds, the easy ones
@@ -229,8 +209,8 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
             ice.localBounds = lbounds
             #world bounds, slightly harder
             wbounds = hsBounds3Ext()
-            minwbounds = transform_vector3_by_plmat(bounds[0], ice.localToWorld)
-            maxwbounds = transform_vector3_by_plmat(bounds[1], ice.localToWorld)
+            minwbounds = utils.transform_vector3_by_plmat(bounds[0], ice.localToWorld)
+            maxwbounds = utils.transform_vector3_by_plmat(bounds[1], ice.localToWorld)
             wbounds.mins = hsVector3(minwbounds[0],minwbounds[1],minwbounds[2])
             wbounds.maxs = hsVector3(maxwbounds[0],maxwbounds[1],maxwbounds[2])
             wbounds.flags = hsBounds3Ext.kAxisAligned
