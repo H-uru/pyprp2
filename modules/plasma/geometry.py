@@ -150,9 +150,8 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         # and return new index in list
         return bufferGroupInd
 
-    def FinallizeDSpans(self,dspansind, quickymat):
+    def FinallizeDSpans(self,dspansind):
         dspans,buffergroupinfos = self.dspans_list[dspansind]
-        dspans.addMaterial(quickymat.key)
         for bgidx, bginfo in enumerate(buffergroupinfos):
             bg = dspans.bufferGroups[bgidx]
             bg.addVertices(bginfo.verts_to_be_written) #NOT bginfo.verts_to_be_writtens
@@ -165,7 +164,7 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
             cell.length = len(bginfo.verts_to_be_written)
             bg.addCells([cell])
             
-    def AddBlenderMeshToDSpans(self, dspansind, blObj, hasCI):
+    def AddBlenderMeshToDSpans(self, dspansind, blObj, hasCI, material_keys):
         mesh = blObj.data
         dspans,buffergroupinfos = self.dspans_list[dspansind]
         bufferverts,inds_by_material = DigestBlMesh(mesh)
@@ -221,7 +220,14 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
             ice.VStartIdx = vert_offset
             ice.ILength = len(inds)
             ice.IStartIdx = inds_offset
-            ice.materialIdx = 0 #point to our dummy material for now.
+            #find or create material
+            print(material_keys)
+            matkey = material_keys[mesh.materials[matindex]]
+            if matkey in dspans.materials:
+                print("Already have it.")
+            else:
+                dspans.addMaterial(material_keys[mesh.materials[matindex]])
+            ice.materialIdx = dspans.materials.index(matkey)
             dspans.addIcicle(ice)
             icicle_inds.append(len(dspans.spans)-1)
         #deal with the DIIndex
