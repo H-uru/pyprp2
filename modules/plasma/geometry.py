@@ -62,9 +62,21 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
             rgbtotals[0]+=col[0] #r
             rgbtotals[1]+=col[1] #g
             rgbtotals[2]+=col[2] #b
-        vert.color = hsColor32(round((rgbtotals[0]/float(len(vertcols)))*255.0),
-                               round((rgbtotals[1]/float(len(vertcols)))*255.0),
-                               round((rgbtotals[2]/float(len(vertcols)))*255.0),
+
+        r = rgbtotals[0]
+        if rgbtotals[0] != 0.0:
+            r = round((rgbtotals[0]/float(len(vertcols)))*255.0)
+        g = rgbtotals[1]
+        if g != 0.0:
+            g = round((rgbtotals[1]/float(len(vertcols)))*255.0)
+        b = rgbtotals[2]
+        if b != 0.0:
+            b = round((rgbtotals[2]/float(len(vertcols)))*255.0)
+        print(r,g,b)
+                  
+        vert.color = hsColor32(int(r),
+                               int(g),
+                               int(b),
                                255).color
     for mati,mat in enumerate(mesh.materials):
         print("Material %s owns %i inds."%(mat.name,len(inds_by_material[mati])))
