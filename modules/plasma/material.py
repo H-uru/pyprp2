@@ -24,6 +24,7 @@ def ExportMaterial(rm, loc, material, vos, exportpath):
                 rm.AddObject(loc,layer)
                 mat.addLayer(layer.key)
             elif texture.type == "IMAGE":
+                pass
 #                if texture.image.source == "FILE":
 #                    texture_name = os.path.splitext(os.path.split(texture.image.filename)[1])[0]
 #                    cacheimagename = texture_name+".dds"
