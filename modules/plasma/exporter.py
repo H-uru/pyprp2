@@ -92,8 +92,21 @@ class PlasmaExportAge(bpy.types.Operator):
             ageinfo.addPage((scene.name,i,0))
         print("Writing age file to %s"%os.path.join(exportpath,agename+".age"))
         ageinfo.writeToFile(os.path.join(exportpath,agename+".age"), pversion)
+        print("Writing fni file...")
+        #just make something default for now
+        fnifile = plEncryptedStream(pversion)
+        fnifile.open(os.path.join(exportpath,agename+".fni"), fmWrite, plEncryptedStream.kEncAuto)
+        fnifile.writeLine("Graphics.Renderer.Setyon 1000000")
+        fnifile.writeLine("Graphics.Renderer.Fog.SetDefColor 0 0 0")
+        fnifile.writeLine("Graphics.Renderer.SetClearColor 0 0 0")
+        fnifile.close()
+        print("Writing sum file...")
+        sumfile = plEncryptedStream(pversion)
+        sumfile.open(os.path.join(exportpath,agename+".sum"), fmWrite, plEncryptedStream.kEncAuto)
+        sumfile.writeInt(0)
+        sumfile.writeInt(0)
+        sumfile.close()
         print("Export Complete")
-        
         return {'FINISHED'}
 
 class PlasmaExportResourcePage(bpy.types.Operator):
