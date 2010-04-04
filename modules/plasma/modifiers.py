@@ -58,6 +58,7 @@ class RemoveModifier(bpy.types.Operator):
         return context.active_object != None
     def execute(self, context):
         context.object.plasma_settings.modifiers.remove(context.object.plasma_settings.activemodifier)
+        context.object.plasma_settings.activemodifier-=1
         return {'FINISHED'}
 
 class PlasmaModifierSettings(bpy.types.IDPropertyGroup):
