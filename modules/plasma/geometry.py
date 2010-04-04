@@ -72,8 +72,6 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
         b = rgbtotals[2]
         if b != 0.0:
             b = round((rgbtotals[2]/float(len(vertcols)))*255.0)
-        print(r,g,b)
-                  
         vert.color = hsColor32(int(r),
                                int(g),
                                int(b),
@@ -233,7 +231,6 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
             ice.ILength = len(inds)
             ice.IStartIdx = inds_offset
             #find or create material
-            print(material_keys)
             matkey = material_keys[mesh.materials[matindex]]
             if matkey in dspans.materials:
                 print("Already have it.")

@@ -5,6 +5,7 @@ from plasma import modifiers
 from plasma import geometry
 from plasma import physics
 from plasma import material
+from plasma import lights
 from plasma import utils
 import os
 
@@ -179,7 +180,7 @@ def ExportAllMaterials(rm, loc, blScn, vos, exportpath):
             mat = materialslot.material
             if not mat in vos.materials: #if we haven't already added it
                 material.ExportMaterial(rm, loc, mat, vos, exportpath)
-                
+
 def ExportSceneNode(rm,loc,blScn,pagename,agename, vos):
     name = "%s_District_%s"%(agename, pagename)
     node = plSceneNode(name)
@@ -188,10 +189,16 @@ def ExportSceneNode(rm,loc,blScn,pagename,agename, vos):
     dspans = geometry.CreateDrawableSpans(agename,node,0,0,pagename) 
     rm.AddObject(loc,dspans)
     vos.geomgr.AddDrawableSpans(dspans)
-
+#get those lamps to export first
     for blObj in blScn.objects:
-        plScnObj = ExportSceneObject(rm, loc, blObj, vos)
-        node.addSceneObject(plScnObj.key)
+        if blObj.type == "LAMP":
+            plScnObj = ExportSceneObject(rm, loc, blObj, vos)
+            node.addSceneObject(plScnObj.key)
+            
+    for blObj in blScn.objects:
+        if blObj.type != "LAMP":
+            plScnObj = ExportSceneObject(rm, loc, blObj, vos)
+            node.addSceneObject(plScnObj.key)
     return node
 
 
@@ -208,11 +215,13 @@ def ExportSceneObject(rm,loc,blObj, vos):
         modifiers.Modifiers.Export(rm, loc, blmods,so)
         if modifiers.HasModifier(blmods, "spawn"):
             hasCI = True #mods force things on here
+    if blObj.type == "LAMP":
+        hasCI = True #force CI for lamp
+        so.addInterface(lights.ExportLamp(rm, loc, blObj, vos, so).key)
     if hasCI:
         print("With CI")
         so.coord = ExportCoordInterface(rm,loc,blObj,so).key
-    #get down to object types
-    if blObj.type == "MESH":
+    elif blObj.type == "MESH":
         print("    as a mesh")
         try:
             physics = blObj.plasma_settings.physicsenabled
