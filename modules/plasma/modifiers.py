@@ -1,6 +1,7 @@
 import bpy
 from PyHSPlasma import *
 from bpy.props import *
+import copy
 
 def HasModifier(blmods,modtype):
     for blmod in blmods:
@@ -8,19 +9,49 @@ def HasModifier(blmods,modtype):
             return True
     return False
 
+def GetModifierClass(typestr):
+    if typestr == "spawn":
+        return Spawn
+    elif typestr == "waveset":
+        return Waveset
+
 #so many static methods...
-class Waveset:
+class ModifierInfo:
     def CreateProps(mod):
         pass
     CreateProps = staticmethod(CreateProps)
     def Draw(self, context, mod):
-        layout = self.layout
-        layout.label(text="No Waveset support yet")
+        pass
     Draw = staticmethod(Draw)
     def Export(mod,plmod):
         pass
     Export = staticmethod(Export)
+    def Copy(src,dest):  #there has to be a better way to copy props to an existing class
+        pass
+    Export = staticmethod(Copy)
 
+class Waveset(ModifierInfo):
+    def Draw(self, context, mod):
+        layout = self.layout
+        layout.label(text="No Waveset support yet")
+
+class Spawn(ModifierInfo):
+    pass
+
+
+def CopyModifierFunc(srcmod,modifiers):
+    #if it's already there create a new name
+    newmod = modifiers.add()
+    if modifiers.get(srcmod.name) == None:
+        newmod.name = srcmod.name
+    else:
+        trynum = 1
+        while modifiers.get(srcmod.name+str(trynum)):
+            trynum+=1
+        newmod.name = srcmod.name+str(trynum)
+    newmod.type = srcmod.type
+    GetModifierClass(srcmod.type).Copy(srcmod, newmod)
+            
 def AddModifierFunc(modifiers,typestr):
     #if it's already there create a new name
     newmod = modifiers.add()
@@ -33,8 +64,17 @@ def AddModifierFunc(modifiers,typestr):
         newmod.name = typestr+str(trynum)
     newmod.type = typestr
     print("Adding a %s"%newmod.type)
-    if typestr == "waveset":
-        Waveset.CreateProps(newmod)
+    GetModifierClass(typestr).CreateProps(newmod)
+
+class CopyModifierToSelected(bpy.types.Operator):
+    bl_idname = "object.plcopymodifier"
+    bl_label = "Copy Modifier to Selected Object"
+
+    def execute(self, context):
+        srcmod = context.object.plasma_settings.modifiers[context.object.plasma_settings.activemodifier]
+        for ob in [ob for ob in context.scene.objects if ob.type == "MESH" and ob.selected and ob != context.object]:
+            CopyModifierFunc(srcmod, ob.plasma_settings.modifiers)
+        return {'FINISHED'}
 
 class AddModifier(bpy.types.Operator):
     bl_idname = "object.pladdmodifier"
@@ -93,6 +133,7 @@ class Modifiers(bpy.types.Panel):
             mod = pl.modifiers[pl.activemodifier]
             layout.prop(mod,"name")
             layout.label(text="type: %s"%mod.type)
+            layout.operator("object.plcopymodifier", text="Copy to Selected")
             if mod.type == "spawn":
                 pass #no other settings than name to draw
             elif mod.type == "waveset":
@@ -110,6 +151,7 @@ class Modifiers(bpy.types.Panel):
 
 def register():
     bpy.types.register(PlasmaModifierSettings)
+    bpy.types.register(CopyModifierToSelected)
     bpy.types.register(AddModifier)
     bpy.types.register(RemoveModifier)
     Modifiers.InitProperties()
@@ -117,6 +159,7 @@ def register():
 
 def unregister():
     bpy.types.unregister(PlasmaModifierSettings)
+    bpy.types.unregister(CopyModifierToSelected)
     bpy.types.unregister(AddModifier)
     bpy.types.unregister(RemoveModifier)
     bpy.types.unregister(Modifiers)

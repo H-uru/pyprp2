@@ -48,7 +48,7 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
         for j, vertidx in enumerate(face.verts):
             vert,vertcols,claimed_by_these_materials = bufferverts[mesh.verts[vertidx]]
             vertcols.append(col[j])
-            vert.UVWs = [hsVector3(face_uvs[uvi][j][0],face_uvs[uvi][j][1],0.0) for uvi in range(len(mesh.uv_textures))]
+            vert.UVWs = [hsVector3(face_uvs[uvi][j][0],1.0-face_uvs[uvi][j][1],0.0) for uvi in range(len(mesh.uv_textures))]
             #add to claimed_by_these_materials
             if not matidx in claimed_by_these_materials: #I'm not sure if this is worth it.
                 claimed_by_these_materials.append(matidx) # Maybe it'd be better to just let there be multiple copies of the same index

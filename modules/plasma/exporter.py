@@ -38,9 +38,9 @@ def convert_version(spv):
     elif spv == "PVHEX":
         return pvHex
 
-def export_scene_as_prp(rm, loc, blscene, agename, path):
+def export_scene_as_prp(rm, loc, blscene, agename, path, confdata):
     vos = VisibleObjectStuff()
-    ExportAllMaterials(rm, loc, blscene, vos, path)
+    ExportAllMaterials(rm, loc, blscene, vos, confdata)
     ExportSceneNode(rm, loc, blscene,blscene.name,agename, vos)
     vos.geomgr.FinallizeDSpans(0)
     page = plPageInfo()
@@ -89,7 +89,7 @@ class PlasmaExportAge(bpy.types.Operator):
             loc = plLocation()
             loc.page = i
             loc.prefix = plsettings.ageprefix
-            export_scene_as_prp(rm, loc, scene, agename, exportpath)
+            export_scene_as_prp(rm, loc, scene, agename, exportpath, confdata)
             ageinfo.addPage((scene.name,i,0))
         print("Writing age file to %s"%os.path.join(exportpath,agename+".age"))
         ageinfo.writeToFile(os.path.join(exportpath,agename+".age"), pversion)
@@ -141,6 +141,8 @@ class PlasmaExportResourcePage(bpy.types.Operator):
             plsettings = bpy.data.worlds[0].plasma_settings
         except:
             raise Exception("Please go take a look at your world settings.  That's the little globe button.")
+        dotblenderpath = bpy.utils.home_paths()[1]
+        confdata = readConfig(os.path.join(dotblenderpath,"pyprp"))
         
         agename = plsettings.agename
         rm = plResManager(convert_version(self.properties.version))
@@ -148,7 +150,7 @@ class PlasmaExportResourcePage(bpy.types.Operator):
         loc = plLocation()
         loc.page = 0
         loc.prefix = plsettings.ageprefix
-        export_scene_as_prp(rm, loc, bpy.data.scenes[0], agename, self.properties.path)
+        export_scene_as_prp(rm, loc, bpy.data.scenes[0], agename, self.properties.path,confdata)
         print("Export Complete")
         return {'FINISHED'}
     def invoke(self, context, event):
@@ -174,12 +176,12 @@ class PlasmaExport(bpy.types.Operator):
 
 ###### End of Blender operator stuff ######
 
-def ExportAllMaterials(rm, loc, blScn, vos, exportpath):
+def ExportAllMaterials(rm, loc, blScn, vos, confdata):
     for blObj in blScn.objects:
         for materialslot in blObj.material_slots:
             mat = materialslot.material
             if not mat in vos.materials: #if we haven't already added it
-                material.ExportMaterial(rm, loc, mat, vos, exportpath)
+                material.ExportMaterial(rm, loc, mat, vos, confdata)
 
 def ExportSceneNode(rm,loc,blScn,pagename,agename, vos):
     name = "%s_District_%s"%(agename, pagename)
