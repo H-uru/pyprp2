@@ -24,8 +24,11 @@ int main(int argc, char **argv) {
     ILinfo ImageInfo;
     iluGetImageInfo(&ImageInfo);
     iluImageParameter(ILU_FILTER, ILU_BILINEAR);
-    unsigned int new_w = (unsigned int)pow(2, log((float)ImageInfo.Width)/log(2.0f));
-    unsigned int new_h = (unsigned int)pow(2, log((float)ImageInfo.Height)/log(2.0f));
+    unsigned int pw = (unsigned int)log((float)ImageInfo.Width)/log(2.0f);
+    unsigned int ph = (unsigned int)log((float)ImageInfo.Width)/log(2.0f);
+    printf("%i, %i\n",pw,ph);
+    unsigned int new_w = (unsigned int)pow(2, (float)pw);
+    unsigned int new_h = (unsigned int)pow(2, (float)ph);
     printf("Sizing to %i %i\n",new_w,new_h);
     iluScale(new_w, new_h, 1);
     if (plString(argv[3]) == "mipmap") {
