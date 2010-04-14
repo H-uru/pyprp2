@@ -24,13 +24,14 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
         face_uvs = []
         for uvtex in mesh.uv_textures:
             face_uvs.append((uvtex.data[i].uv1, uvtex.data[i].uv2, uvtex.data[i].uv3, uvtex.data[i].uv4))
-
-        cols = (vertex_color.data[i].color1, vertex_color.data[i].color2, vertex_color.data[i].color3, vertex_color.data[i].color4)
+        if vertex_color:
+            cols = (vertex_color.data[i].color1, vertex_color.data[i].color2, vertex_color.data[i].color3, vertex_color.data[i].color4)
+        else:
+            cols = ((1.0,1.0,1.0), (1.0,1.0,1.0), (1.0,1.0,1.0), (1.0,1.0,1.0))
         temp_vert_instances = []
         for j, vertidx in enumerate(face.verts):
             #find or create vertex
             secondkey = tuple([(face_uvs[uvi][j][0],1.0-face_uvs[uvi][j][1]) for uvi in range(len(mesh.uv_textures))])
-            print(secondkey)
             first_item = plasma_vert_dict.get(vertidx)
             vertex = None
             if first_item:
