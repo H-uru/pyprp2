@@ -31,13 +31,18 @@ def ExportMaterial(rm, loc, material, vos, config):
                     buildplmipmap_path = os.path.join(exepath, "buildplmipmap")
                     cachename = os.path.splitext(os.path.split(texture.image.filename)[1])[0]
                     cachefilepathfull = os.path.join(cachepath,cachename)
-                    print([buildplmipmap_path, texture.image.filename, cachefilepathfull, "mipmap", "DXT5"])
-                    subprocess.call([buildplmipmap_path, texture.image.filename, cachefilepathfull, "mipmap", "DXT5"])
 
-                    mm = plMipmap(cachename)
-
+                    mm = plMipmap(cachename)                    
                     imgsstream = hsFileStream()
-                    imgsstream.open(cachefilepathfull, fmRead)
+                    try:
+                        imgsstream.open(cachefilepathfull, fmRead)
+                    except:
+                        print([buildplmipmap_path, texture.image.filename, cachefilepathfull, "mipmap", "DXT5"])
+                        subprocess.call([buildplmipmap_path, texture.image.filename, cachefilepathfull, "mipmap", "DXT5"])
+                        imgsstream.open(cachefilepathfull, fmRead)
+
+
+
                     mm.readData(imgsstream)
                     imgsstream.close()
                     rm.AddObject(loc,mm)

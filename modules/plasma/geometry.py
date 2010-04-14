@@ -3,6 +3,8 @@ from PyHSPlasma import *
 from plasma import utils
 
 def DigestBlMesh(mesh): #Let's hope for no indigestion.
+#loop through all the faces and create a pointer-based face-list ([vert0,vert1,vert2,vert3,vert4,vert5] would be two faces) to corresponding verts (vertlist is the same len as facelist)
+#condense vert-list based on copies. Re-adress the faces on the way.
     vertex_color = mesh.vertex_colors.get("Col")
     vertex_alpha = mesh.vertex_colors.get("Alpha")
     
@@ -13,109 +15,99 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
     for mati in range(len(mesh.materials)):
         inds_by_material[mati] = []
 
-    bufferverts = {} #keyed by blender verts
-    for vert in mesh.verts:
-        #create our lookup and fill in what we can
-        #the rest of this function will focus on filling in the gaps in our data
-        vertcols = [] #we'll get the mean of all the different colors of a single vertex at the end
-        claimed_by_these_materials = []
-        v = plGBufferVertex()
-        #position
-        v.pos = hsVector3(vert.co[0],vert.co[1],vert.co[2])
-        #normal
-        v.normal = hsVector3(vert.normal[0],vert.normal[1], vert.normal[2])
-        #add the stuff to the dict
-        bufferverts[vert] = [v,vertcols,claimed_by_these_materials]
+#system: dict[blvertind][positions of uvs] = plGBufferVertex
+#go through faces and connect and grow dict.  Then, dump plvert instances into a big list.
+
+    plasma_vert_dict = {}
     for i, face in enumerate(mesh.faces):
         matidx = face.material_index
         face_uvs = []
         for uvtex in mesh.uv_textures:
             face_uvs.append((uvtex.data[i].uv1, uvtex.data[i].uv2, uvtex.data[i].uv3, uvtex.data[i].uv4))
-        col = (vertex_color.data[i].color1, vertex_color.data[i].color2, vertex_color.data[i].color3, vertex_color.data[i].color4)
-        #store face as pointers to the Plasma verts
-        if len(face.verts) == 3:
-            inds_by_material[matidx].extend([bufferverts[mesh.verts[face.verts[0]]][0],
-                                             bufferverts[mesh.verts[face.verts[1]]][0],
-                                             bufferverts[mesh.verts[face.verts[2]]][0]])      
-        elif len(face.verts) == 4: # a quad must be separated into two triangles
-            inds_by_material[matidx].extend([bufferverts[mesh.verts[face.verts[0]]][0],
-                                             bufferverts[mesh.verts[face.verts[1]]][0],
-                                             bufferverts[mesh.verts[face.verts[2]]][0]]) # first triangle
-            inds_by_material[matidx].extend([bufferverts[mesh.verts[face.verts[0]]][0],
-                                             bufferverts[mesh.verts[face.verts[2]]][0],
-                                             bufferverts[mesh.verts[face.verts[3]]][0]]) # second triangle
 
+        cols = (vertex_color.data[i].color1, vertex_color.data[i].color2, vertex_color.data[i].color3, vertex_color.data[i].color4)
+        temp_vert_instances = []
         for j, vertidx in enumerate(face.verts):
-            vert,vertcols,claimed_by_these_materials = bufferverts[mesh.verts[vertidx]]
-            vertcols.append(col[j])
-            vert.UVWs = [hsVector3(face_uvs[uvi][j][0],1.0-face_uvs[uvi][j][1],0.0) for uvi in range(len(mesh.uv_textures))]
-            #add to claimed_by_these_materials
-            if not matidx in claimed_by_these_materials: #I'm not sure if this is worth it.
-                claimed_by_these_materials.append(matidx) # Maybe it'd be better to just let there be multiple copies of the same index
-    #now our "vert of many colors" operations
-    #we'll just average them for now
-    #if there's a faster way to average these, please change this
-    for vert in bufferverts.values():
-        vert,vertcols,claimed_by_these_materials = vert
-        rgbtotals = [0,0,0]
-        for col in vertcols:
-            rgbtotals[0]+=col[0] #r
-            rgbtotals[1]+=col[1] #g
-            rgbtotals[2]+=col[2] #b
+            #find or create vertex
+            secondkey = tuple([(face_uvs[uvi][j][0],1.0-face_uvs[uvi][j][1]) for uvi in range(len(mesh.uv_textures))])
+            print(secondkey)
+            first_item = plasma_vert_dict.get(vertidx)
+            vertex = None
+            if first_item:
+                vertex = first_item.get(secondkey)
+            else:
+                plasma_vert_dict[vertidx] = {}
+            if vertex == None:
+                #darn, we have to create the vert
+                vert = mesh.verts[vertidx]
+                plvert = plGBufferVertex()
+                plvert.pos = hsVector3(vert.co[0],vert.co[1],vert.co[2]) #position
+                plvert.normal = hsVector3(vert.normal[0],vert.normal[1], vert.normal[2]) #normal
+                plvert.UVWs = [hsVector3(face_uvs[uvi][j][0],1.0-face_uvs[uvi][j][1],0.0) for uvi in range(len(mesh.uv_textures))]
+                vcolor = cols[j]
+                plvert.color = hsColor32(int(round(vcolor[0]*255)), int(round(vcolor[1]*255)), int(round(vcolor[2]*255)), 255).color
 
-        r = rgbtotals[0]
-        if rgbtotals[0] != 0.0:
-            r = round((rgbtotals[0]/float(len(vertcols)))*255.0)
-        g = rgbtotals[1]
-        if g != 0.0:
-            g = round((rgbtotals[1]/float(len(vertcols)))*255.0)
-        b = rgbtotals[2]
-        if b != 0.0:
-            b = round((rgbtotals[2]/float(len(vertcols)))*255.0)
-        vert.color = hsColor32(int(r),
-                               int(g),
-                               int(b),
-                               255).color
-    for mati,mat in enumerate(mesh.materials):
-        print("Material %s owns %i inds."%(mat.name,len(inds_by_material[mati])))
+                plasma_vert_dict[vertidx][secondkey] = plvert
+                vertex=plvert
+            temp_vert_instances.append(vertex)
+                
+
+        if len(temp_vert_instances) == 3:
+            inds_by_material[matidx].extend([temp_vert_instances[0],
+                                             temp_vert_instances[1],
+                                             temp_vert_instances[2]])      
+        elif len(temp_vert_instances) == 4: # a quad must be separated into two triangles
+            inds_by_material[matidx].extend([temp_vert_instances[0],
+                                             temp_vert_instances[1],
+                                             temp_vert_instances[2]])  # first triangle
+            inds_by_material[matidx].extend([temp_vert_instances[0],
+                                             temp_vert_instances[2],
+                                             temp_vert_instances[3]])  # second triangle
+
+    bufferverts = []
+    for item1 in plasma_vert_dict.values():
+        for item2 in item1.values():
+            bufferverts.append(item2)
     return bufferverts,inds_by_material
 
 def GetPlasmaVertsIndsBoundsByMaterial(bufferverts, inds_by_material, material_index):
     pointerinds = inds_by_material[material_index]
-    verts = []
+    material_owned_verts = []
     lboundsmin=None # maximum vertex
     lboundsmax=None # minimum vertex
-            
-    for vert in bufferverts.values(): #we don't need the blvert keying here
-        if material_index in vert[2]: #vert[2] is claimed_by_these_materials
-            verts.append(vert[0]) #add plasma vert to our sack of presents
-            #sneak some bounds creation in here
-            vertpos = vert[0].pos
-            if lboundsmin is None or lboundsmax is None:
-                lboundsmin = [vertpos.X,vertpos.Y,vertpos.Z]
-                lboundsmax = [vertpos.X,vertpos.Y,vertpos.Z]
-            else:
-                #the min
-                if vertpos.X < lboundsmin[0]:
-                    lboundsmin[0] = vertpos.X
-                if vertpos.Y < lboundsmin[1]:
-                    lboundsmin[1] = vertpos.Y
-                if vertpos.Z < lboundsmin[2]:
-                    lboundsmin[2] = vertpos.Z
-                #now the max
-                if vertpos.X > lboundsmax[0]:
-                    lboundsmax[0] = vertpos.X
-                if vertpos.Y > lboundsmax[1]:
-                    lboundsmax[1] = vertpos.Y
-                if vertpos.Z > lboundsmax[2]:
-                    lboundsmax[2] = vertpos.Z
+    #separate the verts
+    for ptrind in pointerinds:
+        if ptrind not in material_owned_verts: #if it's not there already.
+            material_owned_verts.append(ptrind)
+
+    for vert in material_owned_verts: #we don't need the blvert keying here
+        #sneak some bounds creation in here
+        vertpos = vert.pos
+        if lboundsmin is None or lboundsmax is None:
+            lboundsmin = [vertpos.X,vertpos.Y,vertpos.Z]
+            lboundsmax = [vertpos.X,vertpos.Y,vertpos.Z]
+        else:
+            #the min
+            if vertpos.X < lboundsmin[0]:
+                lboundsmin[0] = vertpos.X
+            if vertpos.Y < lboundsmin[1]:
+                lboundsmin[1] = vertpos.Y
+            if vertpos.Z < lboundsmin[2]:
+                lboundsmin[2] = vertpos.Z
+            #now the max
+            if vertpos.X > lboundsmax[0]:
+                lboundsmax[0] = vertpos.X
+            if vertpos.Y > lboundsmax[1]:
+                lboundsmax[1] = vertpos.Y
+            if vertpos.Z > lboundsmax[2]:
+                lboundsmax[2] = vertpos.Z
     if lboundsmin is None or lboundsmax is None:
         lboundsmin = [0.0,0.0,0.0]
         lboundsmax = [0.0,0.0,0.0]
     inds = []
     for ind in pointerinds:
-        inds.append(verts.index(ind))
-    return verts, inds, (lboundsmin,lboundsmax)
+        inds.append(material_owned_verts.index(ind))
+    return material_owned_verts, inds, (lboundsmin,lboundsmax)
 
 def CreateDrawableSpans(agename,scenenode,renderlevel,criteria,pagename):
     spanlabel = "Spans"
