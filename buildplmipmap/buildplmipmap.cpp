@@ -25,7 +25,7 @@ int main(int argc, char **argv) {
     iluGetImageInfo(&ImageInfo);
     iluImageParameter(ILU_FILTER, ILU_BILINEAR);
     unsigned int pw = (unsigned int)log((float)ImageInfo.Width)/log(2.0f);
-    unsigned int ph = (unsigned int)log((float)ImageInfo.Width)/log(2.0f);
+    unsigned int ph = (unsigned int)log((float)ImageInfo.Height)/log(2.0f);
     printf("%i, %i\n",pw,ph);
     unsigned int new_w = (unsigned int)pow(2, (float)pw);
     unsigned int new_h = (unsigned int)pow(2, (float)ph);
