@@ -1,4 +1,4 @@
-#    Copyright (C) 2010  Guild of Writers PyPRP2 Project Team
+#    Copyright (C) 2010 PyPRP2 Project Team
 #    See the file AUTHORS for more info about the team
 #
 #    This program is free software; you can redistribute it and/or modify
