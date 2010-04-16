@@ -1,34 +1,41 @@
-#    Copyright (C) 2010 PyPRP2 Project Team
-#    See the file AUTHORS for more info about the team
-#
-#    This program is free software; you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation; either version 2 of the License, or
-#    (at your option) any later version.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with this program; if not, write to the Free Software
-#    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
-#    Please see the file LICENSE for the full license.
+/* This file is part of PyPRP2.
+ *
+ * Copyright (C) 2010 PyPRP2 Project Team
+ * See the file AUTHORS for more info about the team.
+ *
+ * PyPRP2 is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * PyPRP2 is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "ResManager/plResManager.h"
 #include "PRP/plPageInfo.h"
 #include "PRP/KeyedObject/plLocation.h"
 #include "PRP/Surface/plMipmap.h"
 #include "Util/plString.h"
+#include "Stream/hsStream.h"
 #include "3rdPartyLibs/squish/squish.h"
-
-#include <math.h>
 
 #include <IL/il.h>
 #include <IL/ilu.h>
 
+unsigned int getClosestDXTSize(unsigned int size) {
+	unsigned int p2 = 1;
+    while (p2 < size)
+        p2 <<= 1;
+    if (size == 0)
+        return 1;
+	return p2;
+}
 
 int main(int argc, char **argv) {
     if (argc != 5) {
@@ -43,13 +50,13 @@ int main(int argc, char **argv) {
     ILinfo ImageInfo;
     iluGetImageInfo(&ImageInfo);
     iluImageParameter(ILU_FILTER, ILU_BILINEAR);
-    unsigned int pw = (unsigned int)log((float)ImageInfo.Width)/log(2.0f);
-    unsigned int ph = (unsigned int)log((float)ImageInfo.Height)/log(2.0f);
-    printf("%i, %i\n",pw,ph);
-    unsigned int new_w = (unsigned int)pow(2, (float)pw);
-    unsigned int new_h = (unsigned int)pow(2, (float)ph);
-    printf("Sizing to %i %i\n",new_w,new_h);
-    iluScale(new_w, new_h, 1);
+
+    unsigned int new_w = getClosestDXTSize(ImageInfo.Width);
+    unsigned int new_h = getClosestDXTSize(ImageInfo.Height);
+	if (ImageInfo.Width != new_w || ImageInfo.Height != new_h) {
+        printf("Sizing to %i %i\n",new_w,new_h);
+        iluScale(new_w, new_h, 1);
+    }
     if (plString(argv[3]) == "mipmap") {
         plMipmap* mip = new plMipmap;
         if (plString(argv[4]) == "DXT1")
