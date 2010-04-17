@@ -78,9 +78,9 @@ int main(int argc, char **argv) {
             unsigned char* temp_compressed_data = new unsigned char[mip.getLevelSize(level)];
 
             if (mip.getDXCompression() == plMipmap::kDXT1)
-                squish::CompressImage(ldata, width, height, temp_compressed_data, squish::kDxt1);
+                squish::CompressImage(ldata, width, height, temp_compressed_data, squish::kDxt1 | squish::kColourRangeFit);
             else if (mip.getDXCompression() == plMipmap::kDXT5)
-                squish::CompressImage(ldata, width, height, temp_compressed_data, squish::kDxt5);
+                squish::CompressImage(ldata, width, height, temp_compressed_data, squish::kDxt5 | squish::kColourRangeFit);
             mip.setLevelData(level,temp_compressed_data);
             delete[] temp_compressed_data;
             delete[] ldata;
