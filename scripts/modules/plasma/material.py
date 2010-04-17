@@ -30,15 +30,36 @@ def SetLayerColorToBlMat(layer, material):
     layer.specular = hsColorRGBA(scolor[0],scolor[1],scolor[2],1.0)
     return layer
 
+def SetLayerFlagsAlpha(layer):
+    if layer.state.blendFlags & hsGMatState.kBlendAddColorTimesAlpha:
+        layer.state.blendFlags |= hsGMatState.kBlendAlphaAdd
+    elif layer.state.blendFlags & hsGMatState.kBlendMult:
+        layer.state.blendFlags |= hsGMatState.kBlendAlphaMult
+    else:
+        layer.state.blendFlags |= hsGMatState.kBlendAlpha
+        
+def SetLayerFlags(slot,layer,material):
+    #blendflags
+    if slot.blend_type == "ADD":
+        layer.state.blendFlags |= hsGMatState.kBlendAddColorTimesAlpha
+    elif slot.blend_type == "MULTIPLY":
+        layer.state.blendFlags |= hsGMatState.kBlendMult
+    elif slot.blend_type == "SUBTRACT":
+        layer.state.blendFlags |= hsGMatState.kBlendSubtract
+    #miscflags
+    if material.type == "WIRE":
+        layer.state.miscFlags |= hsGMatState.kMiscWireFrame
+
+
 def ExportMaterial(rm, loc, material, vos, config):
     mat = hsGMaterial(material.name)
     rm.AddObject(loc,mat)
-    
     for slot in material.texture_slots:
         if slot:
             texture = slot.texture
             if texture.type == "NONE": #if it has a none type at least it has a name to export it under
                 layer = plLayer(texture.name)
+                SetLayerFlags(slot,layer, material)
                 SetLayerColorToBlMat(layer,material)
                 rm.AddObject(loc,layer)
                 mat.addLayer(layer.key)
@@ -55,8 +76,12 @@ def ExportMaterial(rm, loc, material, vos, config):
                     try:
                         imgsstream.open(cachefilepathfull, fmRead)
                     except:
-                        print([buildplmipmap_path, texture.image.filename, cachefilepathfull, "mipmap", "DXT5"])
-                        subprocess.call([buildplmipmap_path, texture.image.filename, cachefilepathfull, "mipmap", "DXT5"])
+                        compresstype = "DXT1"
+                        if texture.use_alpha:
+                            compresstype = "DXT5"
+                        callstuff = [buildplmipmap_path, texture.image.filename, cachefilepathfull, "mipmap", compresstype]
+                        print(callstuff)
+                        subprocess.call(callstuff)
                         imgsstream.open(cachefilepathfull, fmRead)
 
 
@@ -66,6 +91,7 @@ def ExportMaterial(rm, loc, material, vos, config):
                     rm.AddObject(loc,mm)
         
                     layer = plLayer(texture.name)
+                    SetLayerFlags(slot,layer, material)
                     layer.texture = mm.key
                     SetLayerColorToBlMat(layer,material)
                     rm.AddObject(loc,layer)

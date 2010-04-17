@@ -19,6 +19,7 @@
 import bpy
 from PyHSPlasma import *
 from plasma import utils
+from plasma import material
 
 def AverageRGB(cols):
     return (cols[0] + cols[1] + cols[2]) / 3.0
@@ -289,7 +290,7 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
                 gmat = hsGMaterial.Convert(matkey.object)
                 for layerkey in gmat.layers:
                     layer = plLayerInterface.Convert(layerkey.object)
-                    layer.state.blendFlags |= hsGMatState.kBlendAlpha
+                    material.SetLayerFlagsAlpha(layer)
             #lights
             blmat = mesh.materials[matindex]
             if not blmat.shadeless:
