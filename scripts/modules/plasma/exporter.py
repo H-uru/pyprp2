@@ -282,7 +282,10 @@ def ExportDrawInterface(rm,loc,blObj,so, hasCI,vos):
     #deciding what render level/criteria is currently very crude
     if blObj.data.vertex_colors.get("Alpha"): #if we have vertex alpha paint
         renderlevel |= (plRenderLevel.kBlendRendMajorLevel << plRenderLevel.kMajorShift)
-    spanind = vos.geomgr.FindOrCreateDrawableSpans(rm, loc, renderlevel, 0)
+    passindxstr = ""
+    if blObj.pass_index != 0:
+        passindxstr = str(blObj.pass_index)
+    spanind = vos.geomgr.FindOrCreateDrawableSpans(rm, loc, renderlevel, 0, passindxstr)
     dspans,diind = vos.geomgr.AddBlenderMeshToDSpans(spanind,blObj, hasCI, vos.materials) #export our mesh
     di.addDrawable(dspans.key,diind)
     rm.AddObject(loc,di)

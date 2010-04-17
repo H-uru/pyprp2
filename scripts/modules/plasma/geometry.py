@@ -147,8 +147,8 @@ def CreateDSpansName(agename, pagename, renderlevel, criteria):
     name = "%s_District_%s_%08x_%x%s"%(agename, pagename, renderlevel, criteria, spanlabel)
     return name
     
-def CreateDrawableSpans(agename,scenenode,renderlevel,criteria,pagename):
-    name = CreateDSpansName(agename, pagename, renderlevel, criteria)
+def CreateDrawableSpans(agename,scenenode,renderlevel,criteria,pagename,passindex):
+    name = CreateDSpansName(agename, pagename, renderlevel, criteria)+passindex
     dspans = plDrawableSpans(name)
     dspans.sceneNode = scenenode.key
     dspans.renderLevel = renderlevel
@@ -187,13 +187,13 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         # and return new index in list
         return bufferGroupInd
 
-    def FindOrCreateDrawableSpans(self, rm, loc, renderlevel, criteria): #returns dspans ind
-        name = CreateDSpansName(self.agename, self.pagename, renderlevel, criteria)
+    def FindOrCreateDrawableSpans(self, rm, loc, renderlevel, criteria, passindex): #returns dspans ind
+        name = CreateDSpansName(self.agename, self.pagename, renderlevel, criteria)+passindex
         for i in range(len(self.dspans_list)):
             dspans = self.dspans_list[i]
             if dspans[0].key.name == name:
                 return i
-        dspans = CreateDrawableSpans(self.agename,rm.getSceneNode(loc),renderlevel,criteria,self.pagename)
+        dspans = CreateDrawableSpans(self.agename,rm.getSceneNode(loc),renderlevel,criteria,self.pagename, passindex)
         rm.AddObject(loc,dspans)
         return self.AddDrawableSpans(dspans)
 
