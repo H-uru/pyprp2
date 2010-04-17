@@ -243,9 +243,6 @@ def ExportSceneObject(rm,loc,blObj, vos):
     if blObj.type == "LAMP":
         hasCI = True #force CI for lamp
         so.addInterface(lights.ExportLamp(rm, loc, blObj, vos, so).key)
-    if hasCI:
-        print("With CI")
-        so.coord = ExportCoordInterface(rm,loc,blObj,so).key
     elif blObj.type == "MESH":
         print("    as a mesh")
         try:
@@ -256,6 +253,9 @@ def ExportSceneObject(rm,loc,blObj, vos):
         if physics:
             so.sim = ExportSimInterface(rm,loc,blObj,so).key
         so.draw = ExportDrawInterface(rm,loc,blObj,so,hasCI,vos).key
+    if hasCI:
+        print("With CI")
+        so.coord = ExportCoordInterface(rm,loc,blObj,so).key
     rm.AddObject(loc, so)
     return so
 
