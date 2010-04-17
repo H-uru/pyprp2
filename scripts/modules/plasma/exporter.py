@@ -31,9 +31,10 @@ import os
 config_name = "pyprp2.conf"
 
 class VisibleObjectStuff: #do YOU have a better name for it? ;P
-    def __init__(self):
-        self.geomgr = geometry.GeometryManager()
+    def __init__(self, agename, pagename):
+        self.geomgr = geometry.GeometryManager(agename, pagename)
         self.materials = {} #keyed by Blender material
+
 
 
 def readConfig(filepath): #tiny little parser
@@ -61,10 +62,10 @@ def convert_version(spv):
         return pvHex
 
 def export_scene_as_prp(rm, loc, blscene, agename, path, confdata):
-    vos = VisibleObjectStuff()
+    vos = VisibleObjectStuff(agename, blscene.name)
     ExportAllMaterials(rm, loc, blscene, vos, confdata)
     ExportSceneNode(rm, loc, blscene,blscene.name,agename, vos)
-    vos.geomgr.FinallizeDSpans(0)
+    vos.geomgr.FinallizeAllDSpans()
     page = plPageInfo()
     page.location = loc
     page.age = agename
@@ -210,9 +211,9 @@ def ExportSceneNode(rm,loc,blScn,pagename,agename, vos):
     node = plSceneNode(name)
     rm.AddObject(loc,node)
     #hacky adding the dspans here.  When we have more than one dspans it may be better to put it in the geom manager.
-    dspans = geometry.CreateDrawableSpans(agename,node,0,0,pagename) 
-    rm.AddObject(loc,dspans)
-    vos.geomgr.AddDrawableSpans(dspans)
+##    dspans = geometry.CreateDrawableSpans(agename,node,0,0,pagename) 
+#    rm.AddObject(loc,dspans)
+#    vos.geomgr.AddDrawableSpans(dspans)
 #get those lamps to export first
     for blObj in blScn.objects:
         if blObj.type == "LAMP":
@@ -277,7 +278,12 @@ def ExportCoordInterface(rm,loc,blObj,so):
 def ExportDrawInterface(rm,loc,blObj,so, hasCI,vos):
     di = plDrawInterface(blObj.name)
     di.owner = so.key
-    dspans,diind = vos.geomgr.AddBlenderMeshToDSpans(0,blObj, hasCI, vos.materials) #export our mesh
+    renderlevel = 0
+    #deciding what render level/criteria is currently very crude
+    if blObj.data.vertex_colors.get("Alpha"): #if we have vertex alpha paint
+        renderlevel |= (plRenderLevel.kBlendRendMajorLevel << plRenderLevel.kMajorShift)
+    spanind = vos.geomgr.FindOrCreateDrawableSpans(rm, loc, renderlevel, 0)
+    dspans,diind = vos.geomgr.AddBlenderMeshToDSpans(spanind,blObj, hasCI, vos.materials) #export our mesh
     di.addDrawable(dspans.key,diind)
     rm.AddObject(loc,di)
     return di

@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
             mip->Create(new_w,new_h,plMipmap::kRGB32Config,0,plMipmap::kDirectXCompression,plMipmap::kDXT1);
         else if (plString(argv[4]) == "DXT5")
             mip->Create(new_w,new_h,plMipmap::kARGB32Config,0,plMipmap::kDirectXCompression,plMipmap::kDXT5);
-        printf("Mipmapping %i levels...\n",mip->getNumLevels());
+        printf("Mipmapping %i levels... this could take a very long time\n",mip->getNumLevels());
         unsigned int width;
         unsigned int height;
 

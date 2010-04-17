@@ -20,6 +20,9 @@ import bpy
 from PyHSPlasma import *
 from plasma import utils
 
+def AverageRGB(cols):
+    return (cols[0] + cols[1] + cols[2]) / 3.0
+
 def DigestBlMesh(mesh): #Let's hope for no indigestion.
 #loop through all the faces and create a pointer-based face-list ([vert0,vert1,vert2,vert3,vert4,vert5] would be two faces) to corresponding verts (vertlist is the same len as facelist)
 #condense vert-list based on copies. Re-adress the faces on the way.
@@ -42,10 +45,16 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
         face_uvs = []
         for uvtex in mesh.uv_textures:
             face_uvs.append((uvtex.data[i].uv1, uvtex.data[i].uv2, uvtex.data[i].uv3, uvtex.data[i].uv4))
+        #handle vertex colors
         if vertex_color:
             cols = (vertex_color.data[i].color1, vertex_color.data[i].color2, vertex_color.data[i].color3, vertex_color.data[i].color4)
         else:
             cols = ((1.0,1.0,1.0), (1.0,1.0,1.0), (1.0,1.0,1.0), (1.0,1.0,1.0))
+        #handle vertex alpha
+        if vertex_alpha:
+            vtx_alphas = (AverageRGB(vertex_alpha.data[i].color1), AverageRGB(vertex_alpha.data[i].color2), AverageRGB(vertex_alpha.data[i].color3), AverageRGB(vertex_alpha.data[i].color4))
+        else:
+            vtx_alphas = (1.0, 1.0, 1.0, 1.0)
         temp_vert_instances = []
         for j, vertidx in enumerate(face.verts):
             #find or create vertex
@@ -64,7 +73,8 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
                 plvert.normal = hsVector3(vert.normal[0],vert.normal[1], vert.normal[2]) #normal
                 plvert.UVWs = [hsVector3(face_uvs[uvi][j][0],1.0-face_uvs[uvi][j][1],0.0) for uvi in range(len(mesh.uv_textures))]
                 vcolor = cols[j]
-                plvert.color = hsColor32(int(round(vcolor[0]*255)), int(round(vcolor[1]*255)), int(round(vcolor[2]*255)), 255).color
+
+                plvert.color = hsColor32(int(round(vcolor[0]*255)), int(round(vcolor[1]*255)), int(round(vcolor[2]*255)), int(round(vtx_alphas[j]*255))).color
 
                 plasma_vert_dict[vertidx][secondkey] = plvert
                 vertex=plvert
@@ -128,13 +138,17 @@ def GetPlasmaVertsIndsBoundsByMaterial(bufferverts, inds_by_material, material_i
         inds.append(material_owned_verts.index(ind))
     return material_owned_verts, inds, (lboundsmin,lboundsmax)
 
-def CreateDrawableSpans(agename,scenenode,renderlevel,criteria,pagename):
+def CreateDSpansName(agename, pagename, renderlevel, criteria):
     spanlabel = "Spans"
     if renderlevel > 0: #it's a blend
         spanlabel = "BlendSpans"
     one="%08x" % renderlevel
     two="%x" % criteria
     name = "%s_District_%s_%08x_%x%s"%(agename, pagename, renderlevel, criteria, spanlabel)
+    return name
+    
+def CreateDrawableSpans(agename,scenenode,renderlevel,criteria,pagename):
+    name = CreateDSpansName(agename, pagename, renderlevel, criteria)
     dspans = plDrawableSpans(name)
     dspans.sceneNode = scenenode.key
     dspans.renderLevel = renderlevel
@@ -147,8 +161,10 @@ class BufferGroupInfo:
         self.inds_to_be_written = []
 
 class GeometryManager: #this could be passed all the stuff needed to make dspans
-    def __init__(self):
+    def __init__(self, agename, pagename):
         self.dspans_list = []
+        self.agename = agename
+        self.pagename = pagename
 
     def AddDrawableSpans(self, dspans):
         self.dspans_list.append([dspans,[]]) #dspans and buffergroup list
@@ -171,6 +187,17 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         # and return new index in list
         return bufferGroupInd
 
+    def FindOrCreateDrawableSpans(self, rm, loc, renderlevel, criteria): #returns dspans ind
+        name = CreateDSpansName(self.agename, self.pagename, renderlevel, criteria)
+        for i in range(len(self.dspans_list)):
+            dspans = self.dspans_list[i]
+            if dspans[0].key.name == name:
+                return i
+        dspans = CreateDrawableSpans(self.agename,rm.getSceneNode(loc),renderlevel,criteria,self.pagename)
+        rm.AddObject(loc,dspans)
+        return self.AddDrawableSpans(dspans)
+
+
     def FinallizeDSpans(self,dspansind):
         dspans,buffergroupinfos = self.dspans_list[dspansind]
         for bgidx, bginfo in enumerate(buffergroupinfos):
@@ -184,9 +211,14 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
             cell.colorStart = -1
             cell.length = len(bginfo.verts_to_be_written)
             bg.addCells([cell])
+
+    def FinallizeAllDSpans(self):
+        for i in range(len(self.dspans_list)):
+            self.FinallizeDSpans(i)
             
     def AddBlenderMeshToDSpans(self, dspansind, blObj, hasCI, material_keys):
         mesh = blObj.data
+        hasvtxalpha = bool(mesh.vertex_colors.get("Alpha"))
         dspans,buffergroupinfos = self.dspans_list[dspansind]
         bufferverts,inds_by_material = DigestBlMesh(mesh)
         icicle_inds = []
@@ -246,8 +278,16 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
             if matkey in dspans.materials:
                 print("Already have it.")
             else:
-                dspans.addMaterial(material_keys[mesh.materials[matindex]])
+                dspans.addMaterial(matkey)
             ice.materialIdx = dspans.materials.index(matkey)
+            #set flags
+            if hasvtxalpha:
+                ice.props |= plSpan.kLiteVtxNonPreshaded
+                #start of some hacky stuff
+                gmat = hsGMaterial.Convert(matkey.object)
+                for layerkey in gmat.layers:
+                    layer = plLayerInterface.Convert(layerkey.object)
+                    layer.state.blendFlags |= hsGMatState.kBlendAlpha
             dspans.addIcicle(ice)
             icicle_inds.append(len(dspans.spans)-1)
         #deal with the DIIndex
