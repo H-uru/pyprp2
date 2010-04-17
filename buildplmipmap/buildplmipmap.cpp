@@ -29,12 +29,12 @@
 #include <IL/ilu.h>
 
 unsigned int getClosestDXTSize(unsigned int size) {
-	unsigned int p2 = 1;
+    unsigned int p2 = 1;
     while (p2 < size)
         p2 <<= 1;
     if (size == 0)
         return 1;
-	return p2;
+    return p2;
 }
 
 int main(int argc, char **argv) {
@@ -53,42 +53,42 @@ int main(int argc, char **argv) {
 
     unsigned int new_w = getClosestDXTSize(ImageInfo.Width);
     unsigned int new_h = getClosestDXTSize(ImageInfo.Height);
-	if (ImageInfo.Width != new_w || ImageInfo.Height != new_h) {
+    if (ImageInfo.Width != new_w || ImageInfo.Height != new_h) {
         printf("Sizing to %i %i\n",new_w,new_h);
         iluScale(new_w, new_h, 1);
     }
     if (plString(argv[3]) == "mipmap") {
-        plMipmap* mip = new plMipmap;
+        plMipmap mip;
         if (plString(argv[4]) == "DXT1")
-            mip->Create(new_w,new_h,plMipmap::kRGB32Config,0,plMipmap::kDirectXCompression,plMipmap::kDXT1);
+            mip.Create(new_w,new_h,plMipmap::kRGB32Config,0,plMipmap::kDirectXCompression,plMipmap::kDXT1);
         else if (plString(argv[4]) == "DXT5")
-            mip->Create(new_w,new_h,plMipmap::kARGB32Config,0,plMipmap::kDirectXCompression,plMipmap::kDXT5);
-        printf("Mipmapping %i levels... this could take a very long time\n",mip->getNumLevels());
+            mipCreate(new_w,new_h,plMipmap::kARGB32Config,0,plMipmap::kDirectXCompression,plMipmap::kDXT5);
+        printf("Mipmapping %i levels... this could take a very long time\n",mip.getNumLevels());
         unsigned int width;
         unsigned int height;
 
-        for (size_t level=0; level < mip->getNumLevels(); level++) {
-            width = mip->getLevelWidth(level);
-            height = mip->getLevelHeight(level);
+        for (size_t level=0; level < mip.getNumLevels(); level++) {
+            width = mip.getLevelWidth(level);
+            height = mip.getLevelHeight(level);
             unsigned char* ldata = new unsigned char[width*height*4];
             printf("%i x %i\n",width,height);
             if (level != 0)
                 iluScale(width, height, 1);
             ilCopyPixels(0, 0, 0, width, height, 1, IL_RGBA, IL_UNSIGNED_BYTE, ldata);
-            unsigned char* temp_compressed_data = new unsigned char[mip->getLevelSize(level)];
+            unsigned char* temp_compressed_data = new unsigned char[mip.getLevelSize(level)];
 
-            if (mip->getDXCompression() == plMipmap::kDXT1)
+            if (mip.getDXCompression() == plMipmap::kDXT1)
                 squish::CompressImage(ldata, width, height, temp_compressed_data, squish::kDxt1);
-            else if (mip->getDXCompression() == plMipmap::kDXT5)
+            else if (mip.getDXCompression() == plMipmap::kDXT5)
                 squish::CompressImage(ldata, width, height, temp_compressed_data, squish::kDxt5);
-            mip->setLevelData(level,temp_compressed_data);
+            mip.setLevelData(level,temp_compressed_data);
             delete[] temp_compressed_data;
             delete[] ldata;
-	    }
-        hsFileStream* os = new hsFileStream;
-        os->open(argv[2],FileMode::fmWrite);
-        mip->writeData(os);
-        os->close();
+        }
+        hsFileStream os;
+        os.open(argv[2],FileMode::fmWrite);
+        mip.writeData(&os);
+        os.close();
     }
     return 0;
 }
