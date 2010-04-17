@@ -34,6 +34,7 @@ class VisibleObjectStuff: #do YOU have a better name for it? ;P
     def __init__(self, agename, pagename):
         self.geomgr = geometry.GeometryManager(agename, pagename)
         self.materials = {} #keyed by Blender material
+        self.lights = {} #keyed by Blender lights
 
 
 
@@ -242,7 +243,9 @@ def ExportSceneObject(rm,loc,blObj, vos):
             hasCI = True #mods force things on here
     if blObj.type == "LAMP":
         hasCI = True #force CI for lamp
-        so.addInterface(lights.ExportLamp(rm, loc, blObj, vos, so).key)
+        light = lights.ExportLamp(rm, loc, blObj, vos, so).key
+        vos.lights[blObj] = light
+        so.addInterface(light)
     elif blObj.type == "MESH":
         print("    as a mesh")
         try:
@@ -286,7 +289,7 @@ def ExportDrawInterface(rm,loc,blObj,so, hasCI,vos):
     if blObj.pass_index != 0:
         passindxstr = str(blObj.pass_index)
     spanind = vos.geomgr.FindOrCreateDrawableSpans(rm, loc, renderlevel, 0, passindxstr)
-    dspans,diind = vos.geomgr.AddBlenderMeshToDSpans(spanind,blObj, hasCI, vos.materials) #export our mesh
+    dspans,diind = vos.geomgr.AddBlenderMeshToDSpans(spanind,blObj, hasCI, vos) #export our mesh
     di.addDrawable(dspans.key,diind)
     rm.AddObject(loc,di)
     return di

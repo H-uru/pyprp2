@@ -216,7 +216,9 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         for i in range(len(self.dspans_list)):
             self.FinallizeDSpans(i)
             
-    def AddBlenderMeshToDSpans(self, dspansind, blObj, hasCI, material_keys):
+    def AddBlenderMeshToDSpans(self, dspansind, blObj, hasCI, vos):
+        material_keys = vos.materials
+        light_keys = vos.lights
         mesh = blObj.data
         hasvtxalpha = bool(mesh.vertex_colors.get("Alpha"))
         dspans,buffergroupinfos = self.dspans_list[dspansind]
@@ -288,6 +290,14 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
                 for layerkey in gmat.layers:
                     layer = plLayerInterface.Convert(layerkey.object)
                     layer.state.blendFlags |= hsGMatState.kBlendAlpha
+            #lights
+            blmat = mesh.materials[matindex]
+            if not blmat.shadeless:
+                ice.props |= plSpan.kPropHasPermaLights
+                for lightkey in light_keys.values(): #to do: check for lightgroup
+                    print("Appending light %s"%lightkey.name)
+                    ice.addPermaLight(lightkey)
+            #finish up
             dspans.addIcicle(ice)
             icicle_inds.append(len(dspans.spans)-1)
         #deal with the DIIndex
