@@ -18,9 +18,8 @@
 
 import bpy
 from PyHSPlasma import *
-from plasma.modifiers import ModBase
 
-class ExampleModifier(bpy.types.operator):
+class ExampleModifier(bpy.types.Operator):
     bl_idname = 'object.examplemodifier'
     bl_label = 'Example'
     category = 'Miscellaneous'

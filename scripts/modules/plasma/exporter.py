@@ -220,10 +220,10 @@ def ExportSceneObject(rm,loc,blObj, vos):
         blmods = blObj.plasma_settings.modifiers
     except:
         blmods = None
-    if blmods:
-        modifiers.Modifiers.Export(rm, loc, blmods,so)
-        if modifiers.HasModifier(blmods, "spawn"):
-            hasCI = True #mods force things on here
+    #if blmods:
+    #    modifiers.Modifiers.Export(rm, loc, blmods,so)
+    #    if modifiers.HasModifier(blmods, "spawn"):
+    #        hasCI = True #mods force things on here
     if blObj.type == "LAMP":
         hasCI = True #force CI for lamp
         light = lights.ExportLamp(rm, loc, blObj, vos, so).key

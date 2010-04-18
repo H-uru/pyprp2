@@ -20,6 +20,7 @@ import bpy
 import os
 import os.path
 import sys
+import plasma
 
 def add_mod_menu(mod):
     lambda self, context: self.layout.operator(mod.bl_idname, text=mod.bl_label)
@@ -35,16 +36,16 @@ class PlasmaModifierMenu(bpy.types.Menu):
 
     @staticmethod
     def AddCategory(name):
-        mnuid = __menuid.format(name)
-        mnucls = __menucls.format(mnuid, name)
+        mnuid = PlasmaModifierMenu.__menuid.format(name)
+        mnucls = PlasmaModifierMenu.__menucls.format(mnuid, name)
         exec(mnucls) #EVIL Hack
 
-        submenus.append(mnuid)
+        PlasmaModifierMenu.submenus.append(mnuid)
 
     @staticmethod
     def AddModifier(mod):
-        mnuid = __menuid.format(mod.category)
-        if not mnuid in submenus:
+        mnuid = PlasmaModifierMenu.__menuid.format(mod.category)
+        if not mnuid in PlasmaModifierMenu.submenus:
             PlasmaModifierMenu.AddCategory(mod.category)
 
         getattr(bpy.types, mnuid).append(add_mod_menu(mod))
@@ -52,7 +53,7 @@ class PlasmaModifierMenu(bpy.types.Menu):
     def draw(self, context):
         layout = self.layout
         
-        for mnu in submenus:
+        for mnu in PlasmaModifierMenu.submenus:
             layout.menu(mnu)
 
 class PlasmaModifierSettings(bpy.types.IDPropertyGroup):
@@ -61,12 +62,6 @@ class PlasmaModifierSettings(bpy.types.IDPropertyGroup):
 PlasmaModifierSettings.StringProperty(attr = 'modclass', name = 'Type', default = '')
 PlasmaModifierSettings.StringProperty(attr = 'modname', name = 'Name', default = '')
 
-bpy.types.Object.PointerProperty(attr = 'plasma_settings',
-                                type = bpy.types.PlasmaSettings,
-                                name = 'Plasma Settings',
-                                description = 'Plasma Engine Object Settings')
-bpy.types.PlasmaSettings.CollectionProperty(attr = 'modifiers', type = PlasmaModifierSettings)
-bpy.types.PlasmaSettings.IntProperty(attr = 'activemodifier', default = 0)
 
 class PlasmaModifierPanel(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
@@ -90,9 +85,16 @@ def register():
     bpy.types.register(PlasmaModifierMenu)
     bpy.types.register(PlasmaModifierPanel)
 
-    modpath = os.path.join(os.path.dirname(PlasmaModifierMenu.__file__), "mods/")
+    bpy.types.Object.PointerProperty(attr = 'plasma_settings',
+                                    type = bpy.types.PlasmaSettings,
+                                    name = 'Plasma Settings',
+                                    description = 'Plasma Engine Object Settings')
+    bpy.types.PlasmaSettings.CollectionProperty(attr = 'modifiers', type = PlasmaModifierSettings)
+    bpy.types.PlasmaSettings.IntProperty(attr = 'activemodifier', default = 0)
+
+    modpath = os.path.join(os.path.dirname(plasma.__file__), "mods/")
     mods = [fname[:-3] for fname in os.listdir(modpath) if fname.endswith('.py')]
-    if not pluginpath in sys.path:
-        sys.path.insert(modpath)
+    if not modpath in sys.path:
+        sys.path.append(modpath)
     modifiers = [__import__(mname) for mname in mods]
-    [PlasmaModifierMenu.AddModifier(bmod) for bmod in [mod.register() for mod in modifiers]]
+    [[PlasmaModifierMenu.AddModifier(bmod) for bmod in mod.register()] for mod in modifiers]
