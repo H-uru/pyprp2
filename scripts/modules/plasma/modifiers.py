@@ -18,19 +18,6 @@
 
 import bpy
 
-class ModBase(bpy.types.operator):
-    @staticmethod
-    def InitProperties():
-        pass
-
-    @staticmethod
-    def DelProperties():
-        pass
-
-    @staticmethod
-    def Export():
-        pass
-
 def add_mod_menu(mod):
     lambda self, context: self.layout.operator(mod.bl_idname, text=mod.bl_label)
 
@@ -57,10 +44,14 @@ class PlasmaModifierMenu(bpy.types.Menu):
         if not mnuid in submenus:
             PlasmaModifierMenu.AddCategory(mod.category)
 
-        eval('bpy.types.'+mnuid+'.append(add_mod_menu(mod))')
+        getattr(bpy.types, mnuid).append(add_mod_menu(mod))
 
     def draw(self, context):
         layout = self.layout
         
         for mnu in submenus:
             layout.menu(mnu)
+
+class PlasmaModifierSettings(bpy.types.IDPropertyGroup):
+    StringProperty(attr = 'modclass', name = 'Type', default = '')
+    StringProperty(attr = 'modname', name = 'Name', default = '')

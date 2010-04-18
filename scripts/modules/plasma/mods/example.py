@@ -24,20 +24,30 @@ class ExampleModifier(bpy.types.operator):
     bl_idname = 'object.examplemodifier'
     bl_label = 'Example'
     category = 'Miscellaneous'
+
+    __has_init = False
     
     @staticmethod
     def InitProperties():
-        pass
+        __has_init = True
 
     @staticmethod
     def Export():
         pass
 
     def execute(self, context):
+        if not ExampleModifier.__has_init:
+            ExampleModifier.InitProperties()
+
+        ob = context.object
+        pl = ob.plasma_settings
+        mod = pl.modifiers.add()
+        mod.name = ob.name + '_' + ExampleModifier.bl_label
+        mod.modclass = ExampleModifier.bl_idname
+        mod.modname = ob.name
         return {'FINISHED'}
 
 def register():
-    ExampleModifier.InitProperties()
     bpy.types.register(ExampleModifier)
 
 def unregister():
