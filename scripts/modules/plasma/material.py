@@ -66,8 +66,8 @@ def ExportMaterial(rm, loc, material, vos, config):
                 mat.addLayer(layer.key)
             elif texture.type == "IMAGE":
                 if texture.image.source == "FILE":
-                    cachepath = config.get("texturecachepath")
-                    exepath = config.get("executablepath")
+                    cachepath = config.get('Paths', 'texcachepath')
+                    exepath = config.get('Paths', 'executablepath')
                     buildplmipmap_path = os.path.join(exepath, "buildplmipmap")
                     imagename = os.path.split(texture.image.filename)[1]
                     cachename = os.path.splitext(imagename)[0]
