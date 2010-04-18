@@ -16,8 +16,15 @@
 #    You should have received a copy of the GNU General Public License
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
-
-"Plasma Engine Environment"
+bl_addon_info = {
+    'name': 'Plasma Development Environment',
+    'author': 'PyPRP2 Project Team',
+    'version': '0.0.1',
+    'blender': (2, 5, 3),
+    'location': 'View3D > Plasma',
+    'description': 'Plasma engine settings and development tools.',
+    'url': 'http://www.guildofwriters.com/wiki/',
+    'category': 'Import/Export'}
 
 import bpy,properties_data_modifier,space_info
 import plasma
