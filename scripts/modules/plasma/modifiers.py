@@ -23,7 +23,7 @@ import sys
 import plasma
 
 def add_mod_menu(mod):
-    lambda self, context: self.layout.operator(mod.bl_idname, text=mod.bl_label)
+    return lambda self, context: self.layout.operator(mod.bl_idname, text=mod.bl_label)
 
 class PlasmaModifierMenu(bpy.types.Menu):
     bl_idname = 'PlasmaModifierMenu'
