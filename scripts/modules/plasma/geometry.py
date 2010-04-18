@@ -20,6 +20,7 @@ import bpy
 from PyHSPlasma import *
 from plasma import utils
 from plasma import material
+from plasma import PlasmaConfigParser
 
 def AverageRGB(cols):
     return (cols[0] + cols[1] + cols[2]) / 3.0
@@ -307,4 +308,37 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         dspans.addDIIndex(di_ind_obj)
         return dspans,(len(dspans.DIIndices)-1)
 
+class AdvRenderLevelPanel(bpy.types.Panel):
+    bl_space_type = 'Properties'
+    bl_region_type = 'WINDOW'
+    bl_context = 'Data'
+    bl_label = 'Render Flags'
+
+    def poll(self, context):
+        cfg = PlasmaConfigParser()
+        if cfg.getboolean('Advanced', 'iamyeesha'):
+            return context.mesh
+        return false
+
+    def draw(self, context):
+        layout = self.layout
+        ob = context.object
+
+        layout.label(text = 'DANGER! This will likely cause rendering errors in Plasma!')
+        layout.prop(ob.plasma_settings, 'drawableoverride')
+
+    @staticmethod
+    def InitProperties():
+        bpy.types.Object.PointerProperty(attr = "plasma_settings",
+                type = bpy.types.PlasmaSettings,
+                name = "Plasma Settings",
+                description = "Plasma Engine Object Settings")
         
+        bpy.types.PlasmaSettings.BoolProperty(attr="drawableoverride",name="Override sane defaults", default=False)
+
+def register():
+    AdvRenderLevelPanel.InitProperties()
+    bpy.types.register(AdvRenderLevelPanel)
+
+def unregister():
+    bpy.types.unregister(AdvRenderLevelPanel)
