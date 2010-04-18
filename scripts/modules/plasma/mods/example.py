@@ -42,13 +42,14 @@ class ExampleModifier(bpy.types.operator):
         ob = context.object
         pl = ob.plasma_settings
         mod = pl.modifiers.add()
-        mod.name = ob.name + '_' + ExampleModifier.bl_label
+        mod.name = ob.name
         mod.modclass = ExampleModifier.bl_idname
         mod.modname = ob.name
         return {'FINISHED'}
 
 def register():
     bpy.types.register(ExampleModifier)
+    return [ExampleModifier]
 
 def unregister():
     bpy.types.unregister(ExampleModifier)

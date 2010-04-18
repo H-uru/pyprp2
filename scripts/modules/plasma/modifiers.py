@@ -17,6 +17,9 @@
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
+import os
+import os.path
+import sys
 
 def add_mod_menu(mod):
     lambda self, context: self.layout.operator(mod.bl_idname, text=mod.bl_label)
@@ -53,5 +56,43 @@ class PlasmaModifierMenu(bpy.types.Menu):
             layout.menu(mnu)
 
 class PlasmaModifierSettings(bpy.types.IDPropertyGroup):
-    StringProperty(attr = 'modclass', name = 'Type', default = '')
-    StringProperty(attr = 'modname', name = 'Name', default = '')
+    pass
+    
+PlasmaModifierSettings.StringProperty(attr = 'modclass', name = 'Type', default = '')
+PlasmaModifierSettings.StringProperty(attr = 'modname', name = 'Name', default = '')
+
+bpy.types.Object.PointerProperty(attr = 'plasma_settings',
+                                type = bpy.types.PlasmaSettings,
+                                name = 'Plasma Settings',
+                                description = 'Plasma Engine Object Settings')
+bpy.types.PlasmaSettings.CollectionProperty(attr = 'modifiers', type = PlasmaModifierSettings)
+bpy.types.PlasmaSettings.IntProperty(attr = 'activemodifier', default = 0)
+
+class PlasmaModifierPanel(bpy.types.Panel):
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "constraint"
+    bl_label = "Plasma Modifiers"
+
+    def draw(self, context):
+        layout = self.layout
+
+        ob = context.object
+        layout.label(text = 'Attached Modifiers:')
+        row = layout.row()
+        row.template_list(ob.plasma_settings, 'modifiers', ob.plasma_settings, 'activemodifier', rows = 2)
+
+        col = row.column(align = True)
+        col.menu('PlasmaModifierMenu', icon = 'ZOOMIN', text = '')
+
+def register():
+    bpy.types.register(PlasmaModifierSettings)
+    bpy.types.register(PlasmaModifierMenu)
+    bpy.types.register(PlasmaModifierPanel)
+
+    modpath = os.path.join(os.path.dirname(PlasmaModifierMenu.__file__), "mods/")
+    mods = [fname[:-3] for fname in os.listdir(modpath) if fname.endswith('.py')]
+    if not pluginpath in sys.path:
+        sys.path.insert(modpath)
+    modifiers = [__import__(mname) for mname in mods]
+    [PlasmaModifierMenu.AddModifier(bmod) for bmod in [mod.register() for mod in modifiers]]
