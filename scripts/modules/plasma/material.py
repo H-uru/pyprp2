@@ -20,6 +20,7 @@ import bpy
 from PyHSPlasma import *
 import os
 import subprocess
+import hashlib
 
 def SetLayerColorToBlMat(layer, material):
     dcolor = material.diffuse_color
@@ -68,24 +69,49 @@ def ExportMaterial(rm, loc, material, vos, config):
                     cachepath = config.get("texturecachepath")
                     exepath = config.get("executablepath")
                     buildplmipmap_path = os.path.join(exepath, "buildplmipmap")
-                    cachename = os.path.splitext(os.path.split(texture.image.filename)[1])[0]
+                    imagename = os.path.split(texture.image.filename)[1]
+                    cachename = os.path.splitext(imagename)[0]
                     cachefilepathfull = os.path.join(cachepath,cachename)
 
                     mm = plMipmap(cachename)                    
                     imgsstream = hsFileStream()
+
+                    mm = plMipmap(cachename)
+                    imgsstream = hsFileStream()
+                    files_exist = False
+                    src_checksum = None
+                    have_to_process = True
                     try:
-                        imgsstream.open(cachefilepathfull, fmRead)
+                        open(cachefilepathfull)#this shouldn't create a memory leak
+                        src_checksum = open(cachefilepathfull+"_src.md5")#this shouldn't create a memory leak                        
+                        files_exist = True
                     except:
+                        pass
+                    if files_exist: #we still need to check the sum
+                        srctex = open(texture.image.filename,"rb")
+                        if hashlib.md5(srctex.read()).hexdigest() == src_checksum.read():
+                            print("Texture %s is the same as last time"%imagename)
+                            have_to_process = False
+                        else:
+                            print("Texture %s has been changed.  Recompressing..."%imagename)
+                        srctex.close()
+                        src_checksum.close()
+                    if have_to_process:
+                        #create checksum
+                        src_checksum = open(cachefilepathfull+"_src.md5","w")
+                        srctex = open(texture.image.filename,"rb")
+                        src_checksum.write(hashlib.md5(srctex.read()).hexdigest())
+                        srctex.close()
+                        src_checksum.close()
+                        #compress texture
                         compresstype = "DXT1"
                         if texture.use_alpha:
                             compresstype = "DXT5"
                         callstuff = [buildplmipmap_path, texture.image.filename, cachefilepathfull, "mipmap", compresstype]
                         print(callstuff)
                         subprocess.call(callstuff)
-                        imgsstream.open(cachefilepathfull, fmRead)
 
-
-
+                    imgsstream.open(cachefilepathfull, fmRead)
                     mm.readData(imgsstream)
                     imgsstream.close()
                     rm.AddObject(loc,mm)
