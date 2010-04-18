@@ -17,8 +17,6 @@
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
-import os
-import configparser
 from plasma import headers
 from plasma import physics
 from plasma import modifiers
@@ -84,16 +82,6 @@ hide = [
 class PlasmaSettings(bpy.types.IDPropertyGroup):
     pass
 
-class PlasmaConfigParser(configparser.ConfigParser):
-    __instance = None
-
-    def __new__(cls, *args, **kwargs):
-        if not cls.__instance:
-            cls.__instance = super(PlasmaConfigParser, cls).__new__(cls, *args, **kwargs)
-            cls.__instance.read(os.path.join(bpy.utils.home_paths()[1], 'pyprp2.conf'))
-        return cls.__instance
-
-
 def disable_panels():
     unregister = bpy.types.unregister
     for cls in hide:
@@ -105,6 +93,7 @@ def plRegister():
     bpy.types.register(PlasmaSettings)
     headers.register()
     modifiers.register()
+    geometry.register()
     physics.register()
     world.register()
 

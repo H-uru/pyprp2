@@ -17,6 +17,17 @@
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
 from PyHSPlasma import *
+import configparser
+import os
+
+class PlasmaConfigParser(configparser.ConfigParser):
+    __instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls.__instance:
+            cls.__instance = super(PlasmaConfigParser, cls).__new__(cls, *args, **kwargs)
+            cls.__instance.read(os.path.join(bpy.utils.home_paths()[1], 'pyprp2.conf'))
+        return cls.__instance
 
 def transform_vector3_by_blmat(vector,m):
     x = m[0][0]*vector[0] + m[1][0]*vector[1] + m[2][0]*vector[2] + m[3][0]

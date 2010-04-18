@@ -20,7 +20,7 @@ import bpy
 from PyHSPlasma import *
 from plasma import utils
 from plasma import material
-from plasma import PlasmaConfigParser
+from plasma.utils import PlasmaConfigParser
 
 def AverageRGB(cols):
     return (cols[0] + cols[1] + cols[2]) / 3.0
@@ -309,9 +309,9 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         return dspans,(len(dspans.DIIndices)-1)
 
 class AdvRenderLevelPanel(bpy.types.Panel):
-    bl_space_type = 'Properties'
+    bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
-    bl_context = 'Data'
+    bl_context = 'data'
     bl_label = 'Render Flags'
 
     def poll(self, context):
