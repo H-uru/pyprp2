@@ -93,6 +93,7 @@ def plRegister():
     bpy.types.register(PlasmaSettings)
     headers.register()
     modifiers.register()
+    geometry.register()
     physics.register()
     world.register()
 

@@ -26,29 +26,14 @@ from plasma import physics
 from plasma import material
 from plasma import lights
 from plasma import utils
+from plasma.utils import PlasmaConfigParser
 import os
-
-config_name = "pyprp2.conf"
 
 class VisibleObjectStuff: #do YOU have a better name for it? ;P
     def __init__(self, agename, pagename):
         self.geomgr = geometry.GeometryManager(agename, pagename)
         self.materials = {} #keyed by Blender material
         self.lights = {} #keyed by Blender lights
-
-
-
-def readConfig(filepath): #tiny little parser
-    file = open(filepath)
-    lines = file.readlines()
-    file.close()
-    info = {}
-    for line in lines:
-        if not line.startswith("#"):
-            line = line.strip("\n")
-            key,value = line.split("=")
-            info[key] = value
-    return info
 
 def convert_version(spv):
     if spv == "PVPRIME":
@@ -83,9 +68,8 @@ class PlasmaExportAge(bpy.types.Operator):
     bl_label = "Export Age"
 
     def execute(self, context):
-        dotblenderpath = bpy.utils.home_paths()[1]
-        confdata = readConfig(os.path.join(dotblenderpath,config_name))
-        exportpath = confdata.get("exportpath")
+        cfg = PlasmaConfigParser()
+        exportpath = cfg.get('Paths', 'exportpath')
         if exportpath == None:
             raise Exception("Can't find variable exportpath in config.")
         if len(bpy.data.worlds) > 1:
@@ -113,7 +97,7 @@ class PlasmaExportAge(bpy.types.Operator):
             loc = plLocation()
             loc.page = i
             loc.prefix = plsettings.ageprefix
-            export_scene_as_prp(rm, loc, scene, agename, exportpath, confdata)
+            export_scene_as_prp(rm, loc, scene, agename, exportpath, cfg)
             ageinfo.addPage((scene.name,i,0))
         print("Writing age file to %s"%os.path.join(exportpath,agename+".age"))
         ageinfo.writeToFile(os.path.join(exportpath,agename+".age"), pversion)
@@ -165,8 +149,7 @@ class PlasmaExportResourcePage(bpy.types.Operator):
             plsettings = bpy.data.worlds[0].plasma_settings
         except:
             raise Exception("Please go take a look at your world settings.  That's the little globe button.")
-        dotblenderpath = bpy.utils.home_paths()[1]
-        confdata = readConfig(os.path.join(dotblenderpath,config_name))
+        cfg = PlasmaConfigParser()
         
         agename = plsettings.agename
         rm = plResManager(convert_version(self.properties.version))
@@ -174,7 +157,7 @@ class PlasmaExportResourcePage(bpy.types.Operator):
         loc = plLocation()
         loc.page = 0
         loc.prefix = plsettings.ageprefix
-        export_scene_as_prp(rm, loc, bpy.data.scenes[0], agename, self.properties.path,confdata)
+        export_scene_as_prp(rm, loc, bpy.data.scenes[0], agename, self.properties.path, cfg)
         print("Export Complete")
         return {'FINISHED'}
     def invoke(self, context, event):
