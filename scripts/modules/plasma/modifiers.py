@@ -60,14 +60,27 @@ class PlasmaModifierSettings(bpy.types.IDPropertyGroup):
     pass
     
 PlasmaModifierSettings.StringProperty(attr = 'modclass', name = 'Type', default = '')
-PlasmaModifierSettings.StringProperty(attr = 'modname', name = 'Name', default = '')
 
+class PlasmaModifierRemove(bpy.types.Operator):
+    bl_idname = 'object.plremovemodifier'
+    bl_label = 'Remove the active modifier'
+    
+    def poll(self, context):
+        return context.active_object != None
+        
+    def execute(self, context):
+        ob = context.object
+        pl = ob.plasma_settings
+
+        pl.modifiers.remove(pl.activemodifier)
+        pl.activemodifier -= 1
+        return {'FINISHED'}
 
 class PlasmaModifierPanel(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
-    bl_context = "constraint"
-    bl_label = "Plasma Modifiers"
+    bl_context = 'constraint'
+    bl_label = 'Plasma Modifiers'
 
     def draw(self, context):
         layout = self.layout
@@ -75,14 +88,30 @@ class PlasmaModifierPanel(bpy.types.Panel):
         ob = context.object
         layout.label(text = 'Attached Modifiers:')
         row = layout.row()
-        row.template_list(ob.plasma_settings, 'modifiers', ob.plasma_settings, 'activemodifier', rows = 2)
+        col = row.column()
+        col.template_list(ob.plasma_settings, 'modifiers', ob.plasma_settings, 'activemodifier', rows = 2)
 
         col = row.column(align = True)
         col.menu('PlasmaModifierMenu', icon = 'ZOOMIN', text = '')
+        col.operator('object.plremovemodifier', icon = 'ZOOMOUT', text = '')
+
+        pl = ob.plasma_settings
+        if len(pl.modifiers) > 0:
+            mod = pl.modifiers[pl.activemodifier]
+            box = layout.box()
+            box.prop(mod, 'name', text = 'Name')
+            
+            row = box.row()
+            row.active = False
+            row.enabled = False
+            row.prop(mod, 'modclass', text = 'Type')
+            
+            
 
 def register():
     bpy.types.register(PlasmaModifierSettings)
     bpy.types.register(PlasmaModifierMenu)
+    bpy.types.register(PlasmaModifierRemove)
     bpy.types.register(PlasmaModifierPanel)
 
     bpy.types.Object.PointerProperty(attr = 'plasma_settings',

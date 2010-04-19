@@ -19,36 +19,53 @@
 import bpy
 from PyHSPlasma import *
 
+# Classes should be a single word, followed by "Modifier"
 class ExampleModifier(bpy.types.Operator):
-    bl_idname = 'object.examplemodifier'
+    # This MUST follow the convention: "object.pl" + classname
+    bl_idname = 'object.plexamplemodifier'
+
+    # This is the name that will appear in the menu
     bl_label = 'Example'
+
+    # This is the submenu name
     category = 'Miscellaneous'
 
     __has_init = False
     
     @staticmethod
     def InitProperties():
-        __has_init = True
+        # Create custom properties here
+        ExampleModifier.__has_init = True
 
     @staticmethod
     def Export():
         pass
 
+    def poll(self, context):
+        # Handle any conditions for this modifier to be applied
+        # If there are no conditions, omit this function
+        return context.active_object != None
+
     def execute(self, context):
+        # If you have custom properties, init them here
         if not ExampleModifier.__has_init:
             ExampleModifier.InitProperties()
 
+        # This part should be identical for all modifiers
         ob = context.object
         pl = ob.plasma_settings
         mod = pl.modifiers.add()
         mod.name = ob.name
         mod.modclass = ExampleModifier.bl_idname
-        mod.modname = ob.name
         return {'FINISHED'}
 
 def register():
+    # Register all necessary types (anything extending bpy.types.*)
     bpy.types.register(ExampleModifier)
+
+    # We return a list of the Modifier operators to the added to the menu
     return [ExampleModifier]
 
 def unregister():
+    # Unregister all the bpy stuff
     bpy.types.unregister(ExampleModifier)
