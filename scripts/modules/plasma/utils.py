@@ -33,6 +33,86 @@ class PlasmaConfigParser(configparser.ConfigParser):
         configparser.ConfigParser.__init__(self)
         self.read([os.path.join(bpy.utils.home_paths()[1], 'pyprp2.conf')])
 
+class plBlenderResManager(plResManager):
+    __instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if not cls.__instance:
+            cls.__instance = super(plBlenderResManager, cls).__new__(cls, *args, **kwargs)
+        return cls.__instance
+
+    def __init__(self):
+        self.scenes = {}
+
+    def getSceneObject(self, ob):
+        loc = None
+        for scn in ob.scene_users:
+            if scn.name in self.scenes:
+               loc = self.scenes[scn.name]
+               break
+
+        if loc is None:
+            return None
+
+        keys = self.getKeys(loc, plFactory.kSceneObject)
+        for key in keys:
+            if key.name == ob.name:
+                return self.getObject(key)
+
+        return None
+
+    def useScene(self, scn):
+        if scn.name in self.scenes:
+            return self.scenes[scn.name]
+
+        try:
+            pl = scn.plasma_settings
+        except:
+            raise Exception('Scene Settings do not exist!')
+        
+        if not pl.exportpage or not scn.world:
+            raise Exception('Invalid Scene!')
+
+        agename = scn.world.name
+        ageinfo = self.useWorld(scn.world)
+        
+        location = plLocation()
+        location.page = pl.pageid
+        location.prefix = ageinfo.seqPrefix
+
+        pageinfo = plPageInfo()
+        pageinfo.loc = location
+        pageinfo.age = agename
+        pageinfo.page = scn.name
+        #pageinfo.flags = ...
+        self.AddPage(pageinfo)
+        ageinfo.addPage((scn.name, pl.pageid, pl.loadpage))
+        
+        self.scenes[scn.name] = location
+        return location
+    
+    def useWorld(self, world):
+        age = self.FindAge(world.name)
+        if not age is None:
+            return age
+        
+        try:
+            pl = world.plasma_settings
+        except:
+            raise Exception('Age Settings do not exist!')
+
+        ageinfo = plAgeInfo()
+        ageinfo.name = world.name
+        ageinfo.dayLength = pl.daylength
+        ageinfo.seqPrefix = pl.ageprefix
+        ageinfo.maxCapacity = pl.maxcapacity
+        ageinfo.lingerTime = pl.lingertime
+        ageinfo.releaseVersion = pl.releaseversion
+        if pl.startdaytime > 0:
+            ageinfo.startDayTime = pl.startdaytime
+
+        self.AddAge(ageinfo)
+        return ageinfo
 
 def transform_vector3_by_blmat(vector,m):
     x = m[0][0]*vector[0] + m[1][0]*vector[1] + m[2][0]*vector[2] + m[3][0]

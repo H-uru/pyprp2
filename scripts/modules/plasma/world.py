@@ -71,11 +71,68 @@ class AgeSettings(bpy.types.Panel):
             layout.prop(pl, "lingertime")
             layout.prop(pl, "releaseversion")
 
+class PlasmaPagePanel(bpy.types.Panel):
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = 'scene'
+    bl_label = 'Plasma Scene'
+
+    @staticmethod
+    def InitProperties():
+        bpy.types.Scene.PointerProperty(
+                        attr = 'plasma_settings',
+                        type = bpy.types.PlasmaSettings,
+                        name = 'Plasma Settings', options = set(),
+                        description = 'Plasma Engine Object Settings')
+        
+        bpy.types.PlasmaSettings.BoolProperty(attr = 'exportpage',
+                        name = 'Export', default = True, options = set(),
+                        description = 'Export this scene to Plasma')
+
+        bpy.types.PlasmaSettings.BoolProperty(attr = 'loadpage',
+                        name = 'Load Scene', default = True, options = set(),
+                        description = 'Load this scene when linking in')
+        
+        bpy.types.PlasmaSettings.IntProperty(attr = 'pageid',
+                        name = 'Scene Identifier', default = 0, min = 0,
+                        options = set(), subtype = 'UNSIGNED', max = 240,
+                        description = 'Unique numeric scene identifier')
+
+        bpy.types.PlasmaSettings.BoolProperty(attr = 'itinerant',
+                        name = 'Intinerant', default = False, options = set(),
+                        description = 'Do not unload this scene')
+        
+
+    def poll(self, context):
+        return context.scene != None
+
+    def draw_header(self, context):
+        scn = context.scene
+        self.layout.prop(scn.plasma_settings, 'exportpage', text = '')
+
+    def draw(self, context):
+        layout = self.layout
+        scn = context.scene
+
+        layout.enabled = scn.plasma_settings.exportpage
+
+        row = layout.row()
+        row.prop(scn, 'name')
+        row.prop(scn.plasma_settings, 'loadpage')
+
+        row = layout.row()
+        col = row.column()
+        col.prop(scn.plasma_settings, 'pageid')
+        col = row.column()
+        col.row().label(text = 'Page Flags:')
+        col.row().prop(scn.plasma_settings, 'itinerant')
+
 def register():
     AgeSettings.InitProperties()
     bpy.types.register(AgeSettings)
+    PlasmaPagePanel.InitProperties()
+    bpy.types.register(PlasmaPagePanel)
 
-    
 def unregister():
     bpy.types.unregister(AgeSettings)
-
+    bpy.types.unregister(PlasmaPagePanel)
