@@ -31,7 +31,7 @@ class PythonModifier(bpy.types.Operator):
         PythonModifier.__has_init = True
     
     @staticmethod
-    def Export():
+    def Export(ob, mod):
         pass
 
     def execute(self, context):
@@ -42,7 +42,7 @@ class PythonModifier(bpy.types.Operator):
         pl = ob.plasma_settings
         mod = pl.modifiers.add()
         mod.name = ob.name
-        mod.modclass = PythonModifier.bl_idname
+        mod.modclass = PythonModifier.bl_idname.split('.')[1]
         return {'FINISHED'}
 
 class PythonFileModPanel(bpy.types.Panel):

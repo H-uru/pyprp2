@@ -52,9 +52,10 @@ def SetLayerFlags(slot,layer,material):
         layer.state.miscFlags |= hsGMatState.kMiscWireFrame
 
 
-def ExportMaterial(rm, loc, material, vos, config):
+def ExportMaterial(rm, loc, material, vos):
     mat = hsGMaterial(material.name)
     rm.AddObject(loc,mat)
+    config = PlasmaConfigParser()
     for slot in material.texture_slots:
         if slot:
             texture = slot.texture

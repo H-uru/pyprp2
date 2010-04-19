@@ -47,7 +47,9 @@ hide = [
     bpy.types.PHYSICS_PT_softbody_edge,
     bpy.types.PHYSICS_PT_softbody_collision,
     bpy.types.PHYSICS_PT_softbody_solver,
-    bpy.types.PHYSICS_PT_softbody_field_weights
+    bpy.types.PHYSICS_PT_softbody_field_weights,
+    bpy.types.OBJECT_PT_constraints,
+    bpy.types.BONE_PT_constraints
     
 ##    bpy.types.MATERIAL_PT_context_material,
 ##    #bpy.types.MATERIAL_PT_preview,

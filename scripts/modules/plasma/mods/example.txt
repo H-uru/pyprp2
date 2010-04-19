@@ -38,7 +38,7 @@ class ExampleModifier(bpy.types.Operator):
         ExampleModifier.__has_init = True
 
     @staticmethod
-    def Export():
+    def Export(ob, mod):
         pass
 
     def poll(self, context):
@@ -56,7 +56,7 @@ class ExampleModifier(bpy.types.Operator):
         pl = ob.plasma_settings
         mod = pl.modifiers.add()
         mod.name = ob.name
-        mod.modclass = ExampleModifier.bl_idname
+        mod.modclass = ExampleModifier.bl_idname.split('.')[1]
         return {'FINISHED'}
 
 def register():

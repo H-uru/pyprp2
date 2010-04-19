@@ -47,9 +47,9 @@ def convert_version(spv):
     elif spv == "PVHEX":
         return pvHex
 
-def export_scene_as_prp(rm, loc, blscene, agename, path, confdata):
+def export_scene_as_prp(rm, loc, blscene, agename, path):
     vos = VisibleObjectStuff(agename, blscene.name)
-    ExportAllMaterials(rm, loc, blscene, vos, confdata)
+    ExportAllMaterials(rm, loc, blscene, vos)
     ExportSceneNode(rm, loc, blscene,blscene.name,agename, vos)
     vos.geomgr.FinallizeAllDSpans()
     page = plPageInfo()
@@ -97,7 +97,7 @@ class PlasmaExportAge(bpy.types.Operator):
             loc = plLocation()
             loc.page = i
             loc.prefix = plsettings.ageprefix
-            export_scene_as_prp(rm, loc, scene, agename, exportpath, cfg)
+            export_scene_as_prp(rm, loc, scene, agename, exportpath)
             ageinfo.addPage((scene.name,i,0))
         print("Writing age file to %s"%os.path.join(exportpath,agename+".age"))
         ageinfo.writeToFile(os.path.join(exportpath,agename+".age"), pversion)
@@ -157,7 +157,7 @@ class PlasmaExportResourcePage(bpy.types.Operator):
         loc = plLocation()
         loc.page = 0
         loc.prefix = plsettings.ageprefix
-        export_scene_as_prp(rm, loc, bpy.data.scenes[0], agename, self.properties.path, cfg)
+        export_scene_as_prp(rm, loc, bpy.data.scenes[0], agename, self.properties.path)
         print("Export Complete")
         return {'FINISHED'}
     def invoke(self, context, event):
@@ -183,12 +183,12 @@ class PlasmaExport(bpy.types.Operator):
 
 ###### End of Blender operator stuff ######
 
-def ExportAllMaterials(rm, loc, blScn, vos, confdata):
+def ExportAllMaterials(rm, loc, blScn, vos):
     for blObj in blScn.objects:
         for materialslot in blObj.material_slots:
             mat = materialslot.material
             if not mat in vos.materials: #if we haven't already added it
-                material.ExportMaterial(rm, loc, mat, vos, confdata)
+                material.ExportMaterial(rm, loc, mat, vos)
 
 def ExportSceneNode(rm,loc,blScn,pagename,agename, vos):
     name = "%s_District_%s"%(agename, pagename)
@@ -224,6 +224,9 @@ def ExportSceneObject(rm,loc,blObj, vos):
     #    modifiers.Modifiers.Export(rm, loc, blmods,so)
     #    if modifiers.HasModifier(blmods, "spawn"):
     #        hasCI = True #mods force things on here
+    if len(blmods) > 0:
+        for mod in blmods:
+            getattr(bpy.types, 'OBJECT_OT_' + mod.modclass).Export(blobj, mod)
     if blObj.type == "LAMP":
         hasCI = True #force CI for lamp
         light = lights.ExportLamp(rm, loc, blObj, vos, so).key
