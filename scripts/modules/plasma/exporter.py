@@ -214,6 +214,7 @@ def ExportSceneNode(rm,loc,blScn,pagename,agename, vos):
 def ExportSceneObject(rm,loc,blObj, vos):
     print("[Exporting %s]"%blObj.name)
     so = plSceneObject(blObj.name)
+    rm.AddObject(loc, so)
     so.sceneNode = rm.getSceneNode(loc).key
     hasCI = False
     try:
@@ -226,7 +227,7 @@ def ExportSceneObject(rm,loc,blObj, vos):
     #        hasCI = True #mods force things on here
     if len(blmods) > 0:
         for mod in blmods:
-            getattr(bpy.types, 'OBJECT_OT_' + mod.modclass).Export(blobj, mod)
+            getattr(bpy.types, 'OBJECT_OT_' + mod.modclass).Export(rm, so, mod)
     if blObj.type == "LAMP":
         hasCI = True #force CI for lamp
         light = lights.ExportLamp(rm, loc, blObj, vos, so).key
@@ -245,7 +246,7 @@ def ExportSceneObject(rm,loc,blObj, vos):
     if hasCI:
         print("With CI")
         so.coord = ExportCoordInterface(rm,loc,blObj,so).key
-    rm.AddObject(loc, so)
+
     return so
 
 def ExportCoordInterface(rm,loc,blObj,so):

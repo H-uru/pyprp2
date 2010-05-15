@@ -18,7 +18,6 @@
 
 import bpy
 from PyHSPlasma import *
-from plasma.utils import plBlenderResManager
 
 class SpawnModifier(bpy.types.Operator):
     bl_idname = 'object.plspawnmodifier'
@@ -26,11 +25,9 @@ class SpawnModifier(bpy.types.Operator):
     category = 'Miscellaneous'
 
     @staticmethod
-    def Export(ob, mod):
-        rm = plBlenderResManager()
-        so = rm.getSceneObject(ob)
+    def Export(rm, so, mod):
         spawnmod = plSpawnModifier(mod.name)
-        rm.addObject(so.key.location, spawnmod)
+        rm.AddObject(so.key.location, spawnmod)
         so.addModifier(spawnmod.key)
 
     def execute(self, context):

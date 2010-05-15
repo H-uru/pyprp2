@@ -18,6 +18,7 @@
 
 import bpy
 from PyHSPlasma import *
+from plasma import utils
 import os
 import subprocess
 import hashlib
@@ -55,7 +56,7 @@ def SetLayerFlags(slot,layer,material):
 def ExportMaterial(rm, loc, material, vos):
     mat = hsGMaterial(material.name)
     rm.AddObject(loc,mat)
-    config = PlasmaConfigParser()
+    config = utils.PlasmaConfigParser()
     for slot in material.texture_slots:
         if slot:
             texture = slot.texture

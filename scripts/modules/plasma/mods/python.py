@@ -31,7 +31,7 @@ class PythonModifier(bpy.types.Operator):
         PythonModifier.__has_init = True
     
     @staticmethod
-    def Export(ob, mod):
+    def Export(rm, so, mod):
         pass
 
     def execute(self, context):
