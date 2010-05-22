@@ -35,6 +35,12 @@ class VisibleObjectStuff: #do YOU have a better name for it? ;P
         self.materials = {} #keyed by Blender material
         self.lights = {} #keyed by Blender lights
 
+def export_clean(path,agename): #deletes old files before export
+    items = os.listdir(path)
+    for item in items:
+        if item.startswith(agename):
+            os.remove(os.path.join(path,item))
+
 def convert_version(spv):
     if spv == "PVPRIME":
         return pvPrime
@@ -81,6 +87,9 @@ class PlasmaExportAge(bpy.types.Operator):
         agename = plsettings.agename
         if not agename:
             raise Exception("You must give your age a name!")
+        print("Cleaning up old files...",end=" ")
+        export_clean(exportpath, agename)
+        print("Done")
         pversion = convert_version(plsettings.plasmaversion)
         rm = plResManager(pversion)
         ageinfo = plAgeInfo()
@@ -93,12 +102,18 @@ class PlasmaExportAge(bpy.types.Operator):
         if plsettings.startdaytime > 0:
             ageinfo.startDayTime = plsettings.startdaytime
         
-        for i, scene in enumerate(bpy.data.scenes):
+        for scene in bpy.data.scenes:
+            if not scene.plasma_settings.exportpage:
+                continue
+            pageid = scene.plasma_settings.pageid
             loc = plLocation()
-            loc.page = i
+            loc.page = pageid
             loc.prefix = plsettings.ageprefix
             export_scene_as_prp(rm, loc, scene, agename, exportpath)
-            ageinfo.addPage((scene.name,i,0))
+            pageflags = 0
+            if not scene.plasma_settings.loadpage:
+                pgflags  |= kFlagPreventAutoLoad
+            ageinfo.addPage((scene.name,pageid,pageflags))
         print("Writing age file to %s"%os.path.join(exportpath,agename+".age"))
         ageinfo.writeToFile(os.path.join(exportpath,agename+".age"), pversion)
         print("Writing fni file...")
@@ -179,6 +194,7 @@ class PlasmaExport(bpy.types.Operator):
             bpy.ops.export.plasmaage()
         elif self.properties.type == "prp":
             bpy.ops.export.plasmaprp('INVOKE_DEFAULT', path="/")
+        ##TODO have an "Export Append" option that splices your pages into an existing age
         return {'FINISHED'}
 
 ###### End of Blender operator stuff ######
