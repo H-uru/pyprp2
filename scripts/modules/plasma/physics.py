@@ -20,7 +20,13 @@ import bpy
 from PyHSPlasma import *
 from plasma import utils
 
-def BuildProxyBounds(blObj):
+def BuildProxyBounds(blObj, dynamic):
+    if dynamic:
+        mat = blObj.matrix.__copy__()
+        mat[3] = [0,0,0,1.0] #translate to 0,0,0
+    else:
+        mat = blObj.matrix
+        
     verts = []
     inds = []
     for face in blObj.data.faces:
@@ -30,7 +36,7 @@ def BuildProxyBounds(blObj):
             inds.extend([face.verts[0],face.verts[1],face.verts[2]])
             inds.extend([face.verts[0],face.verts[2],face.verts[3]])
     for vert in blObj.data.verts:
-        x,y,z = utils.transform_vector3_by_blmat((vert.co[0],vert.co[1],vert.co[2]),blObj.matrix)
+        x,y,z = utils.transform_vector3_by_blmat((vert.co[0],vert.co[1],vert.co[2]),mat)
         verts.append(hsVector3(x,y,z))
     return verts, inds
     
@@ -67,7 +73,6 @@ class Physical(bpy.types.Panel):
         view = context.object
         pl = view.plasma_settings
         self.layout.prop(pl, "physicsenabled", text="")
-
     def draw(self,context):
         layout = self.layout
         view = context.object
@@ -92,10 +97,20 @@ class Physical(bpy.types.Panel):
         plphysical = plGenericPhysical(blObj.name)
         plphysical.sceneNode = rm.getSceneNode(loc).key
         plphysical.object = so.key
+        kickable = blObj.plasma_settings.physicsmass>0
         plphysical.category = 0x02000000
-        plphysical.pos = hsVector3(0.0, 0.0, 0.0)
-        plphysical.rot = hsQuat(0.0, 0.0, 1.0, 0.0)
-        plphysical.LOSDBs = 0x44
+        dynamic = blObj.plasma_settings.dynamic
+        if dynamic:
+            pos = blObj.matrix.translation_part()
+            plphysical.pos = hsVector3(pos[0], pos[1], pos[2])
+        else:
+            plphysical.pos = hsVector3(0.0, 0.0, 0.0)
+        plphysical.rot = hsQuat(0.0, 0.0, 0.0, 1.0)
+        if kickable:
+            plphysical.LOSDBs = 0x00
+            plphysical.Unknown2 = 0x03800000
+        else:
+            plphysical.LOSDBs = 0x44
         plphysical.mass = blObj.plasma_settings.physicsmass
         plphysical.friction = blObj.plasma_settings.physicsfriction
         plphysical.restitution = blObj.plasma_settings.physicsrestitution
@@ -103,7 +118,7 @@ class Physical(bpy.types.Panel):
         if plphysical.boundsType == plSimDefs.kSphereBounds: #sphere
              plphysical.radius = blObj.plasma_settings.physicsradius
         elif plphysical.boundsType == plSimDefs.kProxyBounds: #proxy
-            plphysical.verts, plphysical.indices = BuildProxyBounds(blObj) #do a little odd-looking compact python code
+            plphysical.verts, plphysical.indices = BuildProxyBounds(blObj,dynamic) #do a little odd-looking compact python code
         rm.AddObject(loc,plphysical)
         return plphysical
     Export = staticmethod(Export)

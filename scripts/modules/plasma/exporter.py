@@ -244,6 +244,8 @@ def ExportSceneObject(rm,loc,blObj, vos):
     if len(blmods) > 0:
         for mod in blmods:
             getattr(bpy.types, 'OBJECT_OT_' + mod.modclass).Export(rm, so, mod)
+    if blObj.plasma_settings.isdrawable:
+        hasCI = True
     if blObj.type == "LAMP":
         hasCI = True #force CI for lamp
         light = lights.ExportLamp(rm, loc, blObj, vos, so).key
