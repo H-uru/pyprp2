@@ -258,7 +258,14 @@ def ExportSceneObject(rm,loc,blObj, vos):
         print("    with a physical")
         if physics:
             so.sim = ExportSimInterface(rm,loc,blObj,so).key
-        so.draw = ExportDrawInterface(rm,loc,blObj,so,hasCI,vos).key
+        #drawable
+        try:
+            isdrawable = blObj.plasma_settings.isdrawable
+        except:
+            isdrawable = False
+        print("    as a drawable")
+        if isdrawable:
+            so.draw = ExportDrawInterface(rm,loc,blObj,so,hasCI,vos).key
     if hasCI:
         print("With CI")
         so.coord = ExportCoordInterface(rm,loc,blObj,so).key

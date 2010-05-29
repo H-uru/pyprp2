@@ -21,6 +21,7 @@ from plasma import headers
 from plasma import physics
 from plasma import modifiers
 from plasma import world
+from plasma import object
 
 hide = [
     bpy.types.CLOTH_MT_presets,
@@ -98,4 +99,4 @@ def plRegister():
     geometry.register()
     physics.register()
     world.register()
-
+    object.register()
