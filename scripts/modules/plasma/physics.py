@@ -52,7 +52,7 @@ class Physical(bpy.types.Panel):
         bpy.types.PlasmaSettings.BoolProperty(attr="physicsenabled",name="Physics Enabled", default=False)
         bpy.types.PlasmaSettings.FloatProperty(attr="physicsmass",name="Mass",default=0.0,soft_min=0,soft_max=1000)
         bpy.types.PlasmaSettings.FloatProperty(attr="physicsfriction",name="Friction",default=0.0,soft_min=0,soft_max=10)
-        bpy.types.PlasmaSettings.FloatProperty(attr="physicsrestitution",name="Restitution",default=-1.0,soft_min=-1.0,soft_max=1000)
+        bpy.types.PlasmaSettings.FloatProperty(attr="physicsrestitution",name="Restitution",default=0.0,soft_min=0.0,soft_max=1000)
         bpy.types.PlasmaSettings.EnumProperty(attr="physicsbounds",
                                   items=(
                                       ("1", "Box", ""),
@@ -67,7 +67,7 @@ class Physical(bpy.types.Panel):
                                   default="3")
         bpy.types.PlasmaSettings.StringProperty(attr="physicssubworld")
         bpy.types.PlasmaSettings.StringProperty(attr="physicssndgroup")
-        bpy.types.PlasmaSettings.FloatProperty(attr="physicsradius",name="Radius",default=1.0,soft_min=0,soft_max=1000)
+        bpy.types.PlasmaSettings.FloatProperty(attr="physicsradius",name="Radius",default=1.0,soft_min=0,soft_max=10000)
     InitProperties = staticmethod(InitProperties)
     def draw_header(self, context):
         view = context.object
