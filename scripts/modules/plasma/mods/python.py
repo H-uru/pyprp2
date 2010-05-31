@@ -24,24 +24,22 @@ class PythonModifier(bpy.types.Operator):
     bl_label = 'Python File'
     category = 'Logic'
 
-    __has_init = False
+    @staticmethod
+    def InitProperties(mod):
+        mod.BoolProperty(attr="testprop", name="Test Prop", description="Turning this on does precisely nothing.", default=False)
 
     @staticmethod
-    def InitProperties():
-        PythonModifier.__has_init = True
-    
-    @staticmethod
     def Export(rm, so, mod):
+        #example of exporting
+        #plasmaclass.fTest = mod.testprop
         pass
 
     def execute(self, context):
-        if not PythonModifier.__has_init:
-            PythonModifier.InitProperties()
-        
         ob = context.object
         pl = ob.plasma_settings
         mod = pl.modifiers.add()
         mod.name = ob.name
+        PythonModifier.InitProperties(mod)
         mod.modclass = PythonModifier.bl_idname.split('.')[1]
         return {'FINISHED'}
 
@@ -56,12 +54,17 @@ class PythonFileModPanel(bpy.types.Panel):
         if not ob is None:
             pl = ob.plasma_settings
             if len(pl.modifiers) > 0:
-                return pl.modifiers[pl.activemodifier].modclass == PythonModifier.bl_idname
+                return pl.modifiers[pl.activemodifier].modclass == PythonModifier.bl_idname.split('.')[1]
         return False
 
     def draw(self, context):
         layout = self.layout
-
+        
+        ob = context.active_object
+        pl = ob.plasma_settings
+        plmod = pl.modifiers[pl.activemodifier]
+        layout.prop(plmod, "testprop")
+        
         layout.label(text = 'STOP!')
         layout.label(text = 'An 11/10 neurologists warn against looking at this panel.')
         layout.label(text = 'Side effects include pain, agony, and the ability to see')
