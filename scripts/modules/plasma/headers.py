@@ -19,7 +19,7 @@
 import bpy,space_info,plasma
 from bpy.props import *
 from plasma import exporter
-
+from plasma import importer
 
 class INFO_MT_plasma(bpy.types.Menu):
     bl_idname = "INFO_MT_plasma"
@@ -29,7 +29,7 @@ class INFO_MT_plasma(bpy.types.Menu):
         layout = self.layout
         layout.operator_context = 'EXEC_AREA'
         layout.operator_menu_enum("export.plasmaexport","type", text="Export")
-        #keeping this from being just export for if there's some tool we want in this menu
+        layout.operator_menu_enum("export.plasmaimport","type", text="Import")
 
 
 class INFO_HT_header_plasma(space_info.INFO_HT_header):
@@ -72,6 +72,7 @@ def register():
     bpy.types.register(exporter.PlasmaExport)
     bpy.types.register(exporter.PlasmaExportResourcePage)
     bpy.types.register(exporter.PlasmaExportAge)
+    bpy.types.register(importer.PlasmaImport)
     
 def unregister():
     bpy.types.unregister(INFO_MT_plasma)
@@ -79,4 +80,4 @@ def unregister():
     bpy.types.unregister(exporter.PlasmaExport)
     bpy.types.unregister(exporter.PlasmaExportResourcePage)
     bpy.types.unregister(exporter.PlasmaExportAge)
-
+    bpy.types.unregister(importer.PlasmaImport)
