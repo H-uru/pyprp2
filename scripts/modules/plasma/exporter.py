@@ -251,6 +251,8 @@ def ExportSceneObject(rm,loc,blObj, vos):
         light = lights.ExportLamp(rm, loc, blObj, vos, so).key
         vos.lights[blObj] = light
         so.addInterface(light)
+    elif blObj.type == "EMPTY":
+        hasCI = True
     elif blObj.type == "MESH":
         print("    as a mesh")
         try:

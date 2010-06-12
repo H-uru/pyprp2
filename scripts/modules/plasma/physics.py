@@ -51,7 +51,7 @@ class Physical(bpy.types.Panel):
         
         bpy.types.PlasmaSettings.BoolProperty(attr="physicsenabled",name="Physics Enabled", default=False)
         bpy.types.PlasmaSettings.FloatProperty(attr="physicsmass",name="Mass",default=0.0,soft_min=0,soft_max=1000)
-        bpy.types.PlasmaSettings.FloatProperty(attr="physicsfriction",name="Friction",default=0.0,soft_min=0,soft_max=10)
+        bpy.types.PlasmaSettings.FloatProperty(attr="physicsfriction",name="Friction",default=0.5,soft_min=0,soft_max=10)
         bpy.types.PlasmaSettings.FloatProperty(attr="physicsrestitution",name="Restitution",default=0.0,soft_min=0.0,soft_max=1000)
         bpy.types.PlasmaSettings.EnumProperty(attr="physicsbounds",
                                   items=(
