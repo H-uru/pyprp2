@@ -22,14 +22,19 @@ from plasma import utils
 from plasma import material
 from plasma.utils import PlasmaConfigParser
 
+alpha_names = ['alpha', 'Alpha']
+colour_names = ['colour', 'color', 'col', 'Colour', 'Color', 'Col']
+
 def AverageRGB(cols):
     return (cols[0] + cols[1] + cols[2]) / 3.0
 
 def DigestBlMesh(mesh): #Let's hope for no indigestion.
 #loop through all the faces and create a pointer-based face-list ([vert0,vert1,vert2,vert3,vert4,vert5] would be two faces) to corresponding verts (vertlist is the same len as facelist)
 #condense vert-list based on copies. Re-adress the faces on the way.
-    vertex_color = mesh.vertex_colors.get("Col")
-    vertex_alpha = mesh.vertex_colors.get("Alpha")
+    col_lay = list(set(mesh.vertex_colors.keys()) & set(colour_names)) or ['']
+    vertex_color = mesh.vertex_colors.get(col_lay[0])
+    alpha_lay = list(set(mesh.vertex_colors.keys()) & set(alpha_names)) or ['']
+    vertex_alpha = mesh.vertex_colors.get(alpha_lay)
     
     inds_by_material = {}
     #create empty arrays for the face inds (pointers)
@@ -222,7 +227,7 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         material_keys = vos.materials
         light_keys = vos.lights
         mesh = blObj.data
-        hasvtxalpha = bool(mesh.vertex_colors.get("Alpha"))
+        hasvtxalpha = (set(mesh.vertex_colors.keys()) & set(alpha_names) != set())
         dspans,buffergroupinfos = self.dspans_list[dspansind]
         bufferverts,inds_by_material = DigestBlMesh(mesh)
         icicle_inds = []
