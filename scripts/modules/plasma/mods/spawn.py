@@ -23,7 +23,7 @@ class SpawnModifier(bpy.types.Operator):
     bl_idname = 'object.plspawnmodifier'
     bl_label = 'Link-In Point'
     bl_description = 'Starting point for a player'
-    category = 'Miscellaneous'
+    category = 'Avatar'
 
     @staticmethod
     def Export(rm, so, mod):

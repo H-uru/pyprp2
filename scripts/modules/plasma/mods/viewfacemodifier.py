@@ -39,10 +39,10 @@ class ViewFaceModifier(bpy.types.Operator):
                         name="Follow Mode",
                         description="What the sprite should follow.", 
                         default='cam')
-#        mod.PointerProperty(attr="followobj",
-#                            type = bpy.types.Object,
-#                            name = "Follow Object",
-#                            description="The object to follow.")
+        mod.PointerProperty(attr="followobj",
+                            type = bpy.types.IDPropertyGroup,
+                            name = "Follow Object",
+                            description="The object to follow.")
         ViewFaceModifier.__has_init = True
 
     @staticmethod
@@ -83,8 +83,8 @@ class ViewFaceModPanel(bpy.types.Panel):
         pl = ob.plasma_settings
         plmod = pl.modifiers[pl.activemodifier]
         layout.prop(plmod, "followmode")
-#        if plmod.followmode == 'obj':
-#            layout.prop(plmod, "followobj")
+        if plmod.followmode == 'obj':
+            layout.prop_object(plmod, 'followobj', context.main, 'objects')
 
 def register():
     bpy.types.register(ViewFaceModifier)

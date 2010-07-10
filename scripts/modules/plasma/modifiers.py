@@ -28,6 +28,7 @@ def add_mod_menu(mod):
 class PlasmaModifierMenu(bpy.types.Menu):
     bl_idname = 'PlasmaModifierMenu'
     bl_label = 'Add Modifier'
+    bl_description = 'Add a new modifier'
 
     submenus = []
 
@@ -63,7 +64,8 @@ PlasmaModifierSettings.StringProperty(attr = 'modclass', name = 'Type', default 
 
 class PlasmaModifierRemove(bpy.types.Operator):
     bl_idname = 'object.plremovemodifier'
-    bl_label = 'Remove the active modifier'
+    bl_label = 'Remove Modifier'
+    bl_description = 'Remove the active modifier'
     
     def poll(self, context):
         return context.active_object != None
