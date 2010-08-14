@@ -97,18 +97,21 @@ class Physical(bpy.types.Panel):
         plphysical = plGenericPhysical(blObj.name)
         plphysical.sceneNode = rm.getSceneNode(loc).key
         plphysical.object = so.key
-        kickable = blObj.plasma_settings.physicsmass>0
-        plphysical.category = 0x02000000
         dynamic = blObj.plasma_settings.dynamic
+        kickable = dynamic and blObj.plasma_settings.physicsmass > 0
         if dynamic:
             pos = blObj.matrix.translation_part()
             plphysical.pos = hsVector3(pos[0], pos[1], pos[2])
+            plphysical.memberGroup = plSimDefs.kGroupDynamic
         else:
             plphysical.pos = hsVector3(0.0, 0.0, 0.0)
+            plphysical.memberGroup = plSimDefs.kGroupStatic
         plphysical.rot = hsQuat(0.0, 0.0, 0.0, 1.0)
         if kickable:
             plphysical.LOSDBs = 0x00
-            plphysical.Unknown2 = 0x03800000
+            plphysical.collideGroup |= (1 << plSimDefs.kGroupStatic)
+            plphysical.collideGroup |= (1 << plSimDefs.kGroupDynamic)
+            plphysical.collideGroup |= (1 << plSimDefs.kGroupAnimated)
         else:
             plphysical.LOSDBs = 0x44
         plphysical.mass = blObj.plasma_settings.physicsmass
