@@ -31,7 +31,7 @@ class PlasmaConfigParser(configparser.ConfigParser):
 
     def __init__(self):
         configparser.ConfigParser.__init__(self)
-        self.read([os.path.join(bpy.utils.home_paths()[1], 'pyprp2.conf')])
+        self.read([os.path.join(os.path.expanduser('~'), 'pyprp2.conf')])
 
 class plBlenderResManager(plResManager):
     __instance = None

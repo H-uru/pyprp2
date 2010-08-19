@@ -25,6 +25,7 @@ from plasma import geometry
 from plasma import physics
 from plasma import material
 from plasma import lights
+from plasma import animations
 from plasma import utils
 from plasma.utils import PlasmaConfigParser
 import os
@@ -61,7 +62,7 @@ def export_scene_as_prp(rm, loc, blscene, agename, path):
     page = plPageInfo()
     page.location = loc
     page.age = agename
-    page.page = bpy.data.scenes[0].name
+    page.page = blscene.name
     rm.AddPage(page)
     fullpagename = "%s_District_%s.prp"%(page.age, page.page)
     print("Writing Page %s"%fullpagename)
@@ -180,12 +181,52 @@ class PlasmaExportResourcePage(bpy.types.Operator):
         wm.add_fileselect(self) # will run self.execute()
         return {'RUNNING_MODAL'}
 
+def ExportAvAnimPage():  #this function is so hacky it should be euthanized along with the companion cube
+    cfg = PlasmaConfigParser()
+    exportpath = cfg.get('Paths', 'exportpath')
+    if exportpath == None:
+        raise Exception("Can't find variable exportpath in config.")
+    if len(bpy.data.worlds) > 1:
+        raise Exception("Multiple worlds have been detected, please delete all except one of them to continue.")
+    try:
+        plsettings = bpy.data.worlds[0].plasma_settings
+    except:
+        raise Exception("Please go take a look at your world settings.  That's the little globe button.")            
+    agename = plsettings.agename
+    if not agename:
+        raise Exception("You must give your age a name!")
+
+    pversion = convert_version(plsettings.plasmaversion)    
+    rm = plResManager(pversion)
+    loc = plLocation()
+    loc.page = 0 #:P
+    loc.prefix = plsettings.ageprefix
+
+    pagename = bpy.data.scenes[0].name
+#fun ;)
+    node = plSceneNode("%s_District_%s"%(agename, pagename))
+    rm.AddObject(loc,node)
+    atcanim = animations.processArmature(bpy.data.scenes[0].objects["PlasmaArmature"],pagename)
+    rm.AddObject(loc,atcanim)
+    node.addPoolObject(atcanim.key)
+
+    page = plPageInfo()
+    page.location = loc
+    page.age = agename
+    page.page = pagename
+    rm.AddPage(page)
+    fullpagename = "%s_District_%s.prp"%(page.age, page.page)
+    print("Writing Page %s"%fullpagename)
+    rm.WritePage(os.path.join(exportpath,fullpagename), page)
+
+
 class PlasmaExport(bpy.types.Operator):
     bl_idname = "export.plasmaexport"
     bl_label = "Plasma Export"
     type = EnumProperty(items=(
                                   ("age", "Export Age", ""),
-                                  ("prp", "Export PRP", "")
+                                  ("prp", "Export PRP", ""),
+                                  ("aaprp", "Avatar Animation Page (testing use ONLY)", "")
                               ),
                               name="Export Type",
                               description="Export Type")
@@ -194,6 +235,8 @@ class PlasmaExport(bpy.types.Operator):
             bpy.ops.export.plasmaage()
         elif self.properties.type == "prp":
             bpy.ops.export.plasmaprp('INVOKE_DEFAULT', path="/")
+        elif self.properties.type == "aaprp":
+            ExportAvAnimPage()
         ##TODO have an "Export Append" option that splices your pages into an existing age
         return {'FINISHED'}
 
