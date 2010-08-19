@@ -18,7 +18,7 @@
 
 
 import bpy
-import Mathutils
+import mathutils
 import os
 from PyHSPlasma import *
 from bpy.props import *
@@ -82,12 +82,12 @@ def importAvatarArmatureSystem(path):
 def processBone(obj,blArm,Locations):
     if obj.coord and obj.coord.object:
         coordiface = plCoordinateInterface.Convert(obj.coord.object)
-        hereloc = Mathutils.Vector(Locations[obj.key.name][0],Locations[obj.key.name][1],Locations[obj.key.name][2])
+        hereloc = mathutils.Vector((Locations[obj.key.name][0],Locations[obj.key.name][1],Locations[obj.key.name][2]))
         blbone = blArm.edit_bones[obj.key.name]
         blbone.head = hereloc
         blbone.connected = True
         if blbone.head == hereloc:
-            blbone.tail = Mathutils.Vector(hereloc[0],hereloc[1],hereloc[2]+1)
+            blbone.tail = mathutils.Vector((hereloc[0],hereloc[1],hereloc[2]+1))
         else:
             blbone.tail = hereloc
         for child in coordiface.children:
