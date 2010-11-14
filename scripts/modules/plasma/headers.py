@@ -34,37 +34,11 @@ class INFO_MT_plasma(bpy.types.Menu):
 
 class INFO_HT_header_plasma(space_info.INFO_HT_header):
     def draw(self, context):
+        space_info.INFO_HT_header.draw(self,context)
+        
         layout = self.layout
-
-        window = context.window
-        scene = context.scene
-
-        row = layout.row(align=True)
-        row.template_header()
-
-        if context.area.show_menus:
-            sub = row.row(align=True)
-            sub.menu("INFO_MT_file")
-            sub.menu("INFO_MT_add")
-            sub.menu("INFO_MT_plasma")
-            sub.menu("INFO_MT_help")
-
-        if window.screen.fullscreen:
-            layout.operator("screen.back_to_previous", icon='SCREEN_BACK', text="Back to Previous")
-            layout.separator()
-        else:
-            layout.template_ID(context.window, "screen", new="screen.new", unlink="screen.delete")
-
-        layout.template_ID(context.screen, "scene", new="scene.new", unlink="scene.delete")
-
-        layout.separator()
-
-        layout.template_operator_search()
-        layout.template_running_jobs()
-
-        layout.label(text=scene.statistics())
-
-        layout.operator("wm.window_fullscreen_toggle", icon='FULLSCREEN_ENTER', text="")
+        sub = layout.row(align=True)
+        sub.menu("INFO_MT_plasma")
 
 def register():
     bpy.types.register(INFO_MT_plasma)

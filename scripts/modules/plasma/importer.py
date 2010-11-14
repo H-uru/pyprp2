@@ -24,8 +24,13 @@ from PyHSPlasma import *
 from bpy.props import *
 from plasma.utils import PlasmaConfigParser
 
-ignore_book_and_print = True
-bone_exclude_list = ["BookHandle", "Print_Trunk", "Bone_BookHinge1","Bone_BookHinge2","Print_L Foot","Print_R Foot","Print_L Hand","Print_R Hand",]
+
+boneinclusion = ["handle","BookHandle","Convergence"]
+
+class BoneIntermediate:
+    def __init__(self):
+        self.matrix = None
+        self.parent = None
 
 class PlasmaImport(bpy.types.Operator):
     bl_idname = "export.plasmaimport"
@@ -45,10 +50,11 @@ class PlasmaImport(bpy.types.Operator):
             importAvatarArmatureSystem(os.path.join(importpath,"GlobalAvatars_District_Male.prp"))
         return {'FINISHED'}
 
+def is_armature_bone(name):
+    return (name.startswith("Bone") or name in boneinclusion) #nasty starts with "Bone" hack
 
 def importAvatarArmatureSystem(path):
-    Locations = {}
-    sceneObjects = []
+    bones = {}
     bpy.ops.object.armature_add()
     blArm_obj = bpy.context.scene.objects.active
     blArm_obj.name = "PlasmaArmature"
@@ -63,48 +69,38 @@ def importAvatarArmatureSystem(path):
     rm = plResManager()
     page = rm.ReadPage(path)
     node = rm.getSceneNode(page.location)
-    for soref in node.sceneObjects:
-        if ignore_book_and_print:
-            if soref.name.startswith("Bone_") and soref.name not in bone_exclude_list:
-               obj = plSceneObject.Convert(soref.object)
-               sceneObjects.append(obj)
-               bone_importSOAndInterfaces(obj,blArm,Locations)
-        else:
-            if soref.name.startswith("Bone_") and soref.name in bone_exclude_list:
-                obj = plSceneObject.Convert(soref.object)
-                sceneObjects.append(obj)
-                bone_importSOAndInterfaces(obj,blArm,Locations)
+    for key in node.sceneObjects:
+        sobj = key.object
+        if sobj.coord.object and is_armature_bone(key.name): 
+            ci = sobj.coord.object
+            if not key.name in bones.keys():
+                bones[key.name] = BoneIntermediate()
+            bones[key.name].matrix = ci.localToWorld.mat
+            for child in ci.children:
+                if is_armature_bone(child.name): #only add children who are part of the armature
+                    if child.name not in bones.keys():
+                        bones[child.name] = BoneIntermediate()
+                    bones[child.name].parent = key.name
+    #by the end of all the hard to read code we should have a dict full of filled BoneIntermediate instances
 
-    for obj in sceneObjects:
-        processBone(obj,blArm,Locations)
+    #actually create the bones now
+    print(bones)
+    for name in bones.keys():
+        blArm.edit_bones.new(name)
+    #now fill in the info
+    for name in bones.keys():
+        print("Processing",name)
+        bone = bones[name]
+        blbone = blArm.edit_bones[name]
+        blbone.tail = mathutils.Vector((bone.matrix[0][3],bone.matrix[1][3],bone.matrix[2][3]))
+        #head connects to tail of parent
+        if bone.parent:
+            blbone.use_connect = True
+            blbone.head = mathutils.Vector((bones[bone.parent].matrix[0][3],bones[bone.parent].matrix[1][3],bones[bone.parent].matrix[2][3]))
+            blbone.parent = blArm.edit_bones[bone.parent]
+        else:
+            blbone.head = blbone.tail
     bpy.ops.object.mode_set(mode='OBJECT')
 
-def processBone(obj,blArm,Locations):
-    if obj.coord and obj.coord.object:
-        coordiface = plCoordinateInterface.Convert(obj.coord.object)
-<<<<<<< .mine        hereloc = mathutils.Vector((Locations[obj.key.name][0],Locations[obj.key.name][1],Locations[obj.key.name][2]))
-=======        hereloc = mathutils.Vector(Locations[obj.key.name][0],Locations[obj.key.name][1],Locations[obj.key.name][2])
->>>>>>> .theirs        blbone = blArm.edit_bones[obj.key.name]
-        blbone.head = hereloc
-        blbone.connected = True
-        if blbone.head == hereloc:
-<<<<<<< .mine            blbone.tail = mathutils.Vector((hereloc[0],hereloc[1],hereloc[2]+1))
-=======            blbone.tail = mathutils.Vector(hereloc[0],hereloc[1],hereloc[2]+1)
->>>>>>> .theirs        else:
-            blbone.tail = hereloc
-        for child in coordiface.children:
-            if not (ignore_book_and_print and (child.name in bone_exclude_list or child.name.startswith("Print"))):
-                blArm.edit_bones[child.name].head = hereloc
-                blArm.edit_bones[child.name].parent = blArm.edit_bones[obj.key.name]
-
-def bone_importSOAndInterfaces(obj,blArm,Locations):
-    if obj.coord and obj.coord.object:
-        bpy.ops.armature.bone_primitive_add(name = obj.key.name)
-        coordiface = plCoordinateInterface.Convert(obj.coord.object)
-        Locations[obj.key.name] = (coordiface.localToWorld.mat[0][3],coordiface.localToWorld.mat[1][3],coordiface.localToWorld.mat[2][3])
-
-
-
- 
 
         
