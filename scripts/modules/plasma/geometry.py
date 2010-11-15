@@ -319,6 +319,7 @@ class AdvRenderLevelPanel(bpy.types.Panel):
     bl_context = 'data'
     bl_label = 'Render Flags'
 
+    @classmethod
     def poll(self, context):
         cfg = PlasmaConfigParser()
         if cfg.getboolean('Advanced', 'iamyeesha'):
@@ -349,17 +350,7 @@ class AdvRenderLevelPanel(bpy.types.Panel):
         layout.label(text = 'DANGER! This will likely cause rendering errors in Plasma!')
         layout.prop(ob.plasma_settings, 'drawableoverride')
 
-    @staticmethod
-    def InitProperties():
-        bpy.types.Object.PointerProperty(attr = "plasma_settings",
-                type = bpy.types.PlasmaSettings,
-                name = "Plasma Settings",
-                description = "Plasma Engine Object Settings")
-        
-        bpy.types.PlasmaSettings.BoolProperty(attr="drawableoverride",name="Override sane defaults", default=False)
-
 def register():
-    AdvRenderLevelPanel.InitProperties()
     bpy.types.register(AdvRenderLevelPanel)
 
 def unregister():

@@ -41,6 +41,7 @@ class ExampleModifier(bpy.types.Operator):
     def Export(ob, mod):
         pass
 
+    @classmethod
     def poll(self, context):
         # Handle any conditions for this modifier to be applied
         # If there are no conditions, omit this function

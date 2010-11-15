@@ -45,7 +45,8 @@ class MaintainerMarkerModifier(bpy.types.Operator):
     @staticmethod
     def Export(ob, mod):
         pass
-
+    
+    @classmethod
     def poll(self, context):
         return context.active_object
 
@@ -65,6 +66,7 @@ class MaintainerMarkerModPanel(bpy.types.Panel):
     bl_context = 'constraint'
     bl_label = 'GPS Coordinates'
 
+    @classmethod
     def poll(self, context):
         ob = context.active_object
         if not ob is None:

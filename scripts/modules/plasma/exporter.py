@@ -18,8 +18,8 @@
 
 
 import bpy
-from PyHSPlasma import *
 from bpy.props import *
+from PyHSPlasma import *
 from plasma import modifiers
 from plasma import geometry
 from plasma import physics
@@ -81,11 +81,9 @@ class PlasmaExportAge(bpy.types.Operator):
             raise Exception("Can't find variable exportpath in config.")
         if len(bpy.data.worlds) > 1:
             raise Exception("Multiple worlds have been detected, please delete all except one of them to continue.")
-        try:
-            plsettings = bpy.data.worlds[0].plasma_settings
-        except:
-            raise Exception("Please go take a look at your world settings.  That's the little globe button.")            
-        agename = plsettings.agename
+
+        plsettings = bpy.data.worlds[0].plasma_age        
+        agename = plsettings.name
         if not agename:
             raise Exception("You must give your age a name!")
         print("Cleaning up old files...",end=" ")
@@ -96,7 +94,7 @@ class PlasmaExportAge(bpy.types.Operator):
         ageinfo = plAgeInfo()
         ageinfo.name = agename
         ageinfo.dayLength = plsettings.daylength
-        ageinfo.seqPrefix = plsettings.ageprefix
+        ageinfo.seqPrefix = plsettings.prefix
         ageinfo.maxCapacity = plsettings.maxcapacity
         ageinfo.lingerTime = plsettings.lingertime
         ageinfo.releaseVersion = plsettings.releaseversion
@@ -104,12 +102,12 @@ class PlasmaExportAge(bpy.types.Operator):
             ageinfo.startDayTime = plsettings.startdaytime
         
         for scene in bpy.data.scenes:
-            if not scene.plasma_settings.exportpage:
+            if not scene.plasma_page.isexport:
                 continue
-            pageid = scene.plasma_settings.pageid
+            pageid = scene.plasma_page.id
             loc = plLocation()
             loc.page = pageid
-            loc.prefix = plsettings.ageprefix
+            loc.prefix = plsettings.prefix
             export_scene_as_prp(rm, loc, scene, agename, exportpath)
             pageflags = 0
             if not scene.plasma_settings.loadpage:
@@ -144,7 +142,7 @@ class PlasmaExportResourcePage(bpy.types.Operator):
     path = StringProperty(name="File Path", description="File path used for exporting the PRP file", maxlen= 1024, default= "")
     use_setting = BoolProperty(name="Example Boolean", description="Example Tooltip", default= True)
 
-    version = bpy.props.EnumProperty(attr="plasma_version",
+    version = EnumProperty(attr="plasma_version",
                               items=(
                                   ("PVPRIME", "Plasma 2.0 (59.11)", "Ages Beyond Myst, To D'ni, Untìl Uru"),
                                   ("PVPOTS", "Plasma 2.0 (59.12)", "Path of the Shell, Complete  Chronicles"),
@@ -162,17 +160,17 @@ class PlasmaExportResourcePage(bpy.types.Operator):
             raise Exception("Multiple worlds have been detected, please delete all except one of them to continue.")
         
         try:
-            plsettings = bpy.data.worlds[0].plasma_settings
+            plsettings = bpy.data.worlds[0].plasma_age
         except:
             raise Exception("Please go take a look at your world settings.  That's the little globe button.")
         cfg = PlasmaConfigParser()
         
-        agename = plsettings.agename
+        agename = plsettings.name
         rm = plResManager(convert_version(self.properties.version))
         i = 0
         loc = plLocation()
         loc.page = 0
-        loc.prefix = plsettings.ageprefix
+        loc.prefix = plsettings.prefix
         export_scene_as_prp(rm, loc, bpy.data.scenes[0], agename, self.properties.path)
         print("Export Complete")
         return {'FINISHED'}
@@ -200,7 +198,7 @@ def ExportAvAnimPage():  #this function is so hacky it should be euthanized alon
     rm = plResManager(pversion)
     loc = plLocation()
     loc.page = 0 #:P
-    loc.prefix = plsettings.ageprefix
+    loc.prefix = plsettings.prefix
 
     pagename = bpy.data.scenes[0].name
 #fun ;)

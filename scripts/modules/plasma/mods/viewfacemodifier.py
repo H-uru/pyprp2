@@ -49,6 +49,7 @@ class ViewFaceModifier(bpy.types.Operator):
     def Export(ob, mod):
         pass
 
+    @classmethod
     def poll(self, context):
         return context.active_object and context.active_object.type == 'MESH'
 
@@ -68,6 +69,7 @@ class ViewFaceModPanel(bpy.types.Panel):
     bl_context = 'constraint'
     bl_label = 'Face Things'
 
+    @classmethod
     def poll(self, context):
         ob = context.active_object
         if not ob is None:

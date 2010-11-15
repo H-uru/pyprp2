@@ -65,6 +65,7 @@ class OneShotModPanel(bpy.types.Panel):
     bl_context = 'constraint'
     bl_label = 'One Shot Modifier'
 
+    @classmethod
     def poll(self, context):
         ob = context.active_object
         if not ob is None:

@@ -17,6 +17,7 @@
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
+from bpy.props import *
 import os
 import os.path
 import sys
@@ -58,15 +59,14 @@ class PlasmaModifierMenu(bpy.types.Menu):
             layout.menu(mnu)
 
 class PlasmaModifierSettings(bpy.types.IDPropertyGroup):
-    pass
-    
-PlasmaModifierSettings.StringProperty(attr = 'modclass', name = 'Type', default = '')
+    modclass = StringProperty(attr = 'modclass', name = 'Type', default = '')
 
 class PlasmaModifierRemove(bpy.types.Operator):
     bl_idname = 'object.plremovemodifier'
     bl_label = 'Remove Modifier'
     bl_description = 'Remove the active modifier'
-    
+
+    @classmethod
     def poll(self, context):
         return context.active_object != None
         
@@ -111,17 +111,9 @@ class PlasmaModifierPanel(bpy.types.Panel):
             
 
 def register():
-    bpy.types.register(PlasmaModifierSettings)
     bpy.types.register(PlasmaModifierMenu)
     bpy.types.register(PlasmaModifierRemove)
     bpy.types.register(PlasmaModifierPanel)
-
-    bpy.types.Object.PointerProperty(attr = 'plasma_settings',
-                                    type = bpy.types.PlasmaSettings,
-                                    name = 'Plasma Settings',
-                                    description = 'Plasma Engine Object Settings')
-    bpy.types.PlasmaSettings.CollectionProperty(attr = 'modifiers', type = PlasmaModifierSettings)
-    bpy.types.PlasmaSettings.IntProperty(attr = 'activemodifier', default = 0)
 
     modpath = os.path.join(os.path.dirname(plasma.__file__), "mods/")
     mods = [fname[:-3] for fname in os.listdir(modpath) if fname.endswith('.py')]

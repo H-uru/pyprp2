@@ -17,6 +17,7 @@
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
+from bpy.props import *
 from plasma import headers
 from plasma import physics
 from plasma import modifiers
@@ -51,39 +52,18 @@ hide = [
     bpy.types.PHYSICS_PT_softbody_field_weights,
     bpy.types.OBJECT_PT_constraints,
     bpy.types.BONE_PT_constraints
-    
-##    bpy.types.MATERIAL_PT_context_material,
-##    #bpy.types.MATERIAL_PT_preview,
-##    bpy.types.MATERIAL_PT_diffuse,
-##    bpy.types.MATERIAL_PT_specular,
-##    bpy.types.MATERIAL_PT_shading,
-##    bpy.types.MATERIAL_PT_transp,
-##    bpy.types.MATERIAL_PT_mirror,
-##    bpy.types.MATERIAL_PT_sss,
-##    bpy.types.MATERIAL_PT_halo,
-##    bpy.types.MATERIAL_PT_flare,
-##    bpy.types.MATERIAL_PT_physics,
-##    bpy.types.MATERIAL_PT_strand,
-##    bpy.types.MATERIAL_PT_options,
-##    bpy.types.MATERIAL_PT_shadow,
-##    bpy.types.MATERIAL_PT_transp_game,
-##
-##    bpy.types.MATERIAL_MT_sss_presets,
-##    bpy.types.MATERIAL_MT_specials,
-##
-##    bpy.types.MATERIAL_PT_volume_density,
-##    bpy.types.MATERIAL_PT_volume_shading,
-##    bpy.types.MATERIAL_PT_volume_lighting,
-##    bpy.types.MATERIAL_PT_volume_transp,
-##
-##    bpy.types.MATERIAL_PT_volume_integration,
-##
-##    bpy.types.MATERIAL_PT_custom_props
 ]
 
 
-class PlasmaSettings(bpy.types.IDPropertyGroup):
-    pass
+#maybe try to get this class moved to the object module
+class PlasmaObjectSettings(bpy.types.IDPropertyGroup):
+    physics = PointerProperty(attr = 'physics', type = physics.PlasmaPhysicsSettings)
+    modifiers = CollectionProperty(attr = 'modifiers', type = modifiers.PlasmaModifierSettings)
+
+    drawableoverride = BoolProperty(name="Drawable Override", default = False)
+    activemodifier = IntProperty(attr = 'activemodifier', default = 0)
+    isdrawable = BoolProperty(name="Is Drawable", default=True, description="Export drawable for this object")
+    isdynamic = BoolProperty(name="Dynamic", default=False)
 
 def disable_panels():
     unregister = bpy.types.unregister
@@ -91,12 +71,24 @@ def disable_panels():
         unregister(cls)
 
 def plRegister():
-    #print("plNetMsgPong!")
+    bpy.types.Object.plasma_settings = PointerProperty(attr = 'plasma_settings',
+                                                       type = PlasmaObjectSettings,
+                                                       name = 'Plasma Settings',
+                                                       description = 'Plasma Engine Object Settings')
+    bpy.types.World.plasma_age = PointerProperty(attr = 'plasma_age',
+                                                     type = world.PlasmaAgeSettings,
+                                                     name = 'Plasma Settings',
+                                                     description = 'Plasma Engine Object Settings')
+    
+    bpy.types.Scene.plasma_page = PointerProperty(attr = 'plasma_page',
+                                                       type = world.PlasmaPageSettings,
+                                                       name = 'Plasma Settings',
+                                                       description = 'Plasma Engine Object Settings')
+
     disable_panels()
-    #bpy.types.register(PlasmaSettings)
     headers.register()
-    #modifiers.register()
-    #geometry.register()
-    #physics.register()
-    #world.register()
-    #object.register()
+    modifiers.register()
+    geometry.register()
+    physics.register()
+    world.register()
+    object.register()

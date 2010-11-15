@@ -49,6 +49,7 @@ class PythonFileModPanel(bpy.types.Panel):
     bl_context = 'constraint'
     bl_label = 'Python File Modifier'
 
+    @classmethod
     def poll(self, context):
         ob = context.active_object
         if not ob is None:

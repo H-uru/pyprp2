@@ -16,6 +16,7 @@
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
+from bpy.props import *
 from PyHSPlasma import *
 
 class plObject(bpy.types.Panel):
@@ -23,22 +24,17 @@ class plObject(bpy.types.Panel):
     bl_region_type = 'WINDOW'
     bl_context = "object"
     bl_label = "Plasma Object"
-    def InitProperties():
-        bpy.types.Object.PointerProperty(attr="plasma_settings", type=bpy.types.PlasmaSettings, name="Plasma Settings", description="Plasma Engine Object Settings")
-        bpy.types.PlasmaSettings.BoolProperty(attr="isdrawable",name="Is Drawable", default=True, description="Export drawable for this object")
-        bpy.types.PlasmaSettings.BoolProperty(attr="dynamic",name="Dynamic", default=False)
+
     def draw(self,context):
         layout = self.layout
         view = context.object
         pl = view.plasma_settings
         self.layout.prop(pl, "isdrawable")
-        self.layout.prop(pl, "dynamic")
+        self.layout.prop(pl, "isdynamic")
 
 def register():
-    plObject.InitProperties()
     bpy.types.register(plObject)
 
-    
 def unregister():
     bpy.types.unregister(plObject)
 
