@@ -20,6 +20,7 @@ import bpy
 from bpy.props import *
 from PyHSPlasma import *
 from . import utils
+import mathutils
 
 class PlasmaPhysicsSettings(bpy.types.IDPropertyGroup):
     enabled = BoolProperty(name="Physics Enabled", default=False)
@@ -83,6 +84,7 @@ class plPhysicalPanel(bpy.types.Panel):
         if dynamic:
             pos = blObj.matrix_local.translation_part()
             plphysical.pos = hsVector3(pos[0], pos[1], pos[2])
+            plphysical.pos = hsVector3(0.0, 0.0, 0.0)
             plphysical.memberGroup = plSimDefs.kGroupDynamic
         else:
             plphysical.pos = hsVector3(0.0, 0.0, 0.0)
@@ -92,7 +94,6 @@ class plPhysicalPanel(bpy.types.Panel):
             plphysical.LOSDBs = 0x00
             plphysical.collideGroup |= (1 << plSimDefs.kGroupStatic)
             plphysical.collideGroup |= (1 << plSimDefs.kGroupDynamic)
-            plphysical.collideGroup |= (1 << plSimDefs.kGroupAnimated)
         else:
             plphysical.LOSDBs = 0x44
         plphysical.mass = blObj.plasma_settings.physics.mass
@@ -109,7 +110,7 @@ class plPhysicalPanel(bpy.types.Panel):
 def BuildProxyBounds(blObj, dynamic):
     if dynamic:
         mat = blObj.matrix_local.__copy__()
-        mat[3] = [0,0,0,1.0] #translate to 0,0,0
+        mat[3][:3] = [0,0,0] #translate to 0,0,0
     else:
         mat = blObj.matrix_local
         
@@ -122,8 +123,8 @@ def BuildProxyBounds(blObj, dynamic):
             inds.extend(face.vertices[:3])
             inds.extend([face.vertices[0],face.vertices[2],face.vertices[3]])
     for vert in blObj.data.vertices:
-        x,y,z = utils.transform_vector3_by_blmat((vert.co[0],vert.co[1],vert.co[2]),mat)
-        verts.append(hsVector3(x,y,z))
+        vert_trans = mathutils.Vector(vert.co)*mat
+        verts.append(hsVector3(vert_trans[0],vert_trans[1],vert_trans[2]))
     return verts, inds
 
 def register():
