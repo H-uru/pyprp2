@@ -20,6 +20,7 @@ import bpy
 from PyHSPlasma import *
 from . import utils
 from . import material
+from . import lights
 from .utils import PlasmaConfigParser
 
 alpha_names = ['alpha', 'Alpha']
@@ -35,7 +36,9 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
     vertex_color = mesh.vertex_colors.get(col_lay[0])
     alpha_lay = list(set(mesh.vertex_colors.keys()) & set(alpha_names)) or ['']
     vertex_alpha = mesh.vertex_colors.get(alpha_lay[0])
-    
+    if not vertex_color:
+        vertex_color = mesh.vertex_colors.get('autobake')
+
     inds_by_material = {}
     #create empty arrays for the face inds (pointers)
     if len(mesh.materials) < 1:
@@ -56,7 +59,7 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
         if vertex_color:
             cols = (vertex_color.data[i].color1, vertex_color.data[i].color2, vertex_color.data[i].color3, vertex_color.data[i].color4)
         else:
-            cols = ((1.0,1.0,1.0), (1.0,1.0,1.0), (1.0,1.0,1.0), (1.0,1.0,1.0))
+            cols = ((0.0,1.0,1.0), (0.0,0.0,0.0), (0.0,0.0,0.0), (0.0,0.0,0.0))
         #handle vertex alpha
         if vertex_alpha:
             vtx_alphas = (AverageRGB(vertex_alpha.data[i].color1), AverageRGB(vertex_alpha.data[i].color2), AverageRGB(vertex_alpha.data[i].color3), AverageRGB(vertex_alpha.data[i].color4))
@@ -201,7 +204,19 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         material_keys = vos.materials
         light_keys = vos.lights
         mesh = blObj.data
+        hasvtxcolor = (set(mesh.vertex_colors.keys()) & set(colour_names) != set())
         hasvtxalpha = (set(mesh.vertex_colors.keys()) & set(alpha_names) != set())
+        
+        #autobake if we don't have a vertex color channel
+        if not hasvtxcolor:
+            print("Baking Vertex Colors...")
+            auto_bake_paint = mesh.vertex_colors.get("autobake")
+            if not auto_bake_paint:
+                auto_bake_paint = mesh.vertex_colors.new("autobake")
+            lights.set_vertex_color_black(auto_bake_paint)
+            for lightkey in light_keys.values():
+                lights.light_mesh(blObj.data, blObj.matrix_world, lightkey.object, auto_bake_paint)
+    
         dspans,buffergroupinfos = self.dspans_list[dspansind]
         bufferverts,inds_by_material = DigestBlMesh(mesh)
         icicle_inds = []

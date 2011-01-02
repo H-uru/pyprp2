@@ -18,7 +18,7 @@
 
 from PyHSPlasma import *
 import configparser
-import bpy
+import bpy, mathutils
 import os
 
 class PlasmaConfigParser(configparser.ConfigParser):
@@ -132,3 +132,10 @@ def blMatrix44_2_hsMatrix44(blmat):
         for j in range(4):
             hsmat[i,j] = blmat[j][i]
     return hsmat
+
+def hsMatrix44_2_blMatrix44(hsmat):
+    blmat = mathutils.Matrix()
+    for i in range(4):
+        for j in range(4):
+            blmat[j][i] = hsmat[i,j]
+    return blmat

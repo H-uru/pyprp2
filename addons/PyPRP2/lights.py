@@ -103,3 +103,49 @@ def ExportLamp(rm, loc, blObj, vos, sceneobject):
     w2l = utils.blMatrix44_2_hsMatrix44(matcopy)
     light.worldToLight = w2l
     return light
+
+
+
+##Plasma Vert-Baking Code
+##If someone thinks of a better place to put it, feel free to move it.
+
+def set_vertex_color_black(vcol): #is there a better way?
+    for i in vcol.data:
+        i.color1 = (0,0,0)
+        i.color2 = (0,0,0)
+        i.color3 = (0,0,0)
+        i.color4 = (0,0,0)
+
+def add_colors(col1, col2):
+    #if the value is over one it will be changed to one automatically when it is set
+    return (col1[0]+col2[0],col1[1]+col2[1],col1[2]+col2[2])
+
+def calc_color_omni(pllamp, distance, normal_dot):
+    factor = (1/(pllamp.attenConst + pllamp.attenLinear*distance + pllamp.attenQuadratic*(distance**2)))*normal_dot
+    return pllamp.diffuse.red*factor,pllamp.diffuse.green*factor,pllamp.diffuse.blue*factor
+
+def light_mesh(mesh, matrix_world, pllamp, vpaint):
+    #decide lighting function
+    if pllamp.key.type == plFactory.kOmniLightInfo:
+        lightfunc = calc_color_omni
+    else:
+        #unsupported type
+        return
+
+    l_pos = utils.hsMatrix44_2_blMatrix44(pllamp.lightToWorld).translation_part()
+    for index_face, face in enumerate(mesh.faces):
+        for index_v, vertexind in enumerate(face.vertices):
+            v_pos = mesh.vertices[vertexind].co*matrix_world
+            dot = mesh.vertices[vertexind].normal.dot((l_pos-v_pos).normalize())
+            if dot < 0:
+                continue
+            dist = (v_pos-l_pos).length
+            #very, very ugly
+            if index_v == 0:
+                vpaint.data[index_face].color1 = add_colors(vpaint.data[index_face].color1,lightfunc(pllamp, dist,dot))
+            elif index_v == 1:
+                vpaint.data[index_face].color2 = add_colors(vpaint.data[index_face].color2,lightfunc(pllamp, dist,dot))
+            elif index_v == 2:
+                vpaint.data[index_face].color3 = add_colors(vpaint.data[index_face].color3,lightfunc(pllamp, dist,dot))
+            else:
+                vpaint.data[index_face].color4 = add_colors(vpaint.data[index_face].color4,lightfunc(pllamp, dist,dot))
