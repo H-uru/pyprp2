@@ -140,6 +140,8 @@ def light_mesh(mesh, matrix_world, pllamp, vpaint):
             if dot < 0:
                 continue
             dist = (v_pos-l_pos).length
+            if dist > pllamp.attenCutoff:
+                continue
             #very, very ugly
             if index_v == 0:
                 vpaint.data[index_face].color1 = add_colors(vpaint.data[index_face].color1,lightfunc(pllamp, dist,dot))
