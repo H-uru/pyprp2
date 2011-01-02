@@ -1,0 +1,72 @@
+#    This file is part of PyPRP2.
+#    
+#    Copyright (C) 2010 PyPRP2 Project Team
+#    See the file AUTHORS for more info about the team.
+#    
+#    PyPRP2 is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#    
+#    PyPRP2 is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#    
+#    You should have received a copy of the GNU General Public License
+#    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
+
+import bpy
+from PyHSPlasma import *
+
+# Classes should be a single word, followed by "Modifier"
+class ExampleModifier(bpy.types.Operator):
+    # This MUST follow the convention: "object.pl" + classname
+    bl_idname = 'object.plexamplemodifier'
+
+    # This is the name that will appear in the menu
+    bl_label = 'Example'
+
+    # This is the submenu name
+    category = 'Miscellaneous'
+
+    __has_init = False
+    
+    @staticmethod
+    def InitProperties():
+        # Create custom properties here
+        ExampleModifier.__has_init = True
+
+    @staticmethod
+    def Export(ob, mod):
+        pass
+
+    @classmethod
+    def poll(self, context):
+        # Handle any conditions for this modifier to be applied
+        # If there are no conditions, omit this function
+        return context.active_object != None
+
+    def execute(self, context):
+        # If you have custom properties, init them here
+        if not ExampleModifier.__has_init:
+            ExampleModifier.InitProperties()
+
+        # This part should be identical for all modifiers
+        ob = context.object
+        pl = ob.plasma_settings
+        mod = pl.modifiers.add()
+        mod.name = ob.name
+        mod.modclass = ExampleModifier.bl_idname.split('.')[1]
+        return {'FINISHED'}
+
+def register():
+    # Register all necessary types (anything extending bpy.types.*)
+    bpy.types.register(ExampleModifier)
+
+    # We return a list of the Modifier operators to the added to the menu
+    return [ExampleModifier]
+
+def unregister():
+    # Unregister all the bpy stuff
+    bpy.types.unregister(ExampleModifier)
