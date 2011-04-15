@@ -21,22 +21,22 @@ from bpy.props import *
 from PyHSPlasma import *
 import random
 
-randomint = random.randint(100, 20000)
+randomint = random.randint(100, 200)
 
 
-class PlasmaAgeSettings(bpy.types.IDPropertyGroup):
+class PlasmaAgeSettings(bpy.types.PropertyGroup):
     name = StringProperty(name='Age Name')
-    prefix = IntProperty(name='Unique Age Prefix', default=100, soft_min=0, soft_max=20000)
+    prefix = IntProperty(name='Unique Age Prefix', default=randomint, soft_min=0, soft_max=20000)
     plasmaversion = EnumProperty(items=(
                                       ('PVPRIME', 'Plasma 2.0 (59.11)', 'Ages Beyond Myst, To D\'ni, Untìl Uru'),
                                       ('PVPOTS', 'Plasma 2.0 (59.12)', 'Path of the Shell, Complete  Chronicles'),
-                                      ('PVLIVE', 'Plasma 2.0 (70.9)', 'Myst Online: Uru Live, MOULagain, MagiQuest Online'),
+                                      ('PVMOUL', 'Plasma 2.0 (70.9)', 'Myst Online: Uru Live, MOULagain, MagiQuest Online'),
                                       ('PVEOA', 'Plasma 2.1', 'End of Ages, Crowthistle'),
                                       ('PVHEX', 'Plasma 3.0', 'HexIsle')
                                   ),
                                   name='Plasma Version',
                                   description='Plasma Engine Version',
-                                  default='PVPOTS')
+                                  default='PVMOUL')
     isadvanced = BoolProperty(name='Advanced Settings', default=False)
     daylength = FloatProperty(name='Day Length', default=24.0, soft_min=0.0)    
     startdaytime = IntProperty(name='Start Day Time', default=0, soft_min=0)
@@ -44,14 +44,11 @@ class PlasmaAgeSettings(bpy.types.IDPropertyGroup):
     lingertime = IntProperty(name='Linger Time', default=180, soft_min=0)
     releaseversion = IntProperty(name='Release Version', default=0, soft_min=0)
         
-class PlasmaPageSettings(bpy.types.IDPropertyGroup):
+class PlasmaPageSettings(bpy.types.PropertyGroup):
     isexport = BoolProperty(name = 'Export', default = True, options = set(),
                         description = 'Export this scene to Plasma')
-    load = BoolProperty(name = 'Load Scene', default = True, options = set(),
+    load = BoolProperty(name = 'Load On Link', default = True, options = set(),
                         description = 'Load this scene when linking in')
-    id = IntProperty(name = 'Scene Identifier', default = 0, min = 0,
-                        options = set(), subtype = 'UNSIGNED', max = 240,
-                        description = 'Unique numeric scene identifier')
     itinerant = BoolProperty(name = 'Intinerant', default = False, options = set(),
                         description = 'Do not unload this scene')
 
@@ -69,10 +66,9 @@ class plAgeSettingsPanel(bpy.types.Panel):
         layout.prop(pl, 'name')
         layout.prop(pl, 'plasmaversion')
         layout.prop(pl, 'prefix')
-        if pl.prefix == 100:
-            layout.label(text='It looks like you haven\'t set your prefix.')
-            layout.label(text='It is important that you set this to something other than the default.')
-            layout.label(text='How about using this random number: %i'%randomint)
+        if pl.prefix >= 100 and pl.prefix <= 200:
+            layout.label(text='This is a temporary development prefix.')
+            layout.label(text='Please register for an official prefix.')
         layout.prop(pl, 'isadvanced')
         if pl.isadvanced:
             layout.prop(pl, 'daylength')
@@ -102,19 +98,17 @@ class plPagePanel(bpy.types.Panel):
 
         layout.enabled = pl.isexport
 
-        row = layout.row()
-        row.prop(scn, 'name')
-        row.prop(pl, 'load')
-
-        row = layout.row()
-        col = row.column()
-        col.prop(pl, 'id')
-        col = row.column()
-        col.row().label(text = 'Page Flags:')
-        col.row().prop(pl, 'itinerant')
+        layout.prop(pl, 'load')
+        layout.prop(pl, 'itinerant')
 
 def register():
-    pass
+    bpy.utils.register_class(PlasmaAgeSettings)
+    bpy.utils.register_class(PlasmaPageSettings)
+    bpy.utils.register_class(plAgeSettingsPanel)
+    bpy.utils.register_class(plPagePanel)
 
 def unregister():
-    pass
+    bpy.utils.unregister_class(plPagePanel)
+    bpy.utils.unregister_class(plAgeSettingsPanel)
+    bpy.utils.unregister_class(PlasmaPageSettings)
+    bpy.utils.unregister_class(PlasmaAgeSettings)

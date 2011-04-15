@@ -40,8 +40,8 @@ class SpawnModifier(bpy.types.Operator):
         return {'FINISHED'}
 
 def register():
-    bpy.types.register(SpawnModifier)
+    bpy.utils.register_class(SpawnModifier)
     return [SpawnModifier]
 
 def unregister():
-    pass
+    bpy.utils.unregister_class(SpawnModifier)

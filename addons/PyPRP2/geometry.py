@@ -18,10 +18,10 @@
 
 import bpy
 from PyHSPlasma import *
-from . import utils
-from . import material
-from . import lights
-from .utils import PlasmaConfigParser
+import utils
+import material
+import lights
+from utils import PlasmaConfigParser
 
 alpha_names = ['alpha', 'Alpha']
 colour_names = ['colour', 'color', 'col', 'Colour', 'Color', 'Col']
@@ -42,7 +42,7 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
     inds_by_material = {}
     #create empty arrays for the face inds (pointers)
     if len(mesh.materials) < 1:
-        raise Exception("Object with meah %s does not have a material"%mesh.name)
+        raise Exception("Object with mesh %s does not have a material"%mesh.name)
     for mati in range(len(mesh.materials)):
         inds_by_material[mati] = []
 
@@ -324,7 +324,7 @@ class AdvRenderLevelPanel(bpy.types.Panel):
         layout.prop(ob.plasma_settings, 'drawableoverride')
 
 def register():
-    pass
+    bpy.utils.register_class(AdvRenderLevelPanel)
 
 def unregister():
-    pass
+    bpy.utils.unregister_class(AdvRenderLevelPanel)

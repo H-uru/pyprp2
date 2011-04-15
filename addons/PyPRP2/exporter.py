@@ -20,15 +20,17 @@
 import bpy
 from bpy.props import *
 from PyHSPlasma import *
-from . import modifiers
-from . import geometry
-from . import physics
-from . import material
-from . import lights
-from . import animations
-from . import utils
-from .utils import PlasmaConfigParser
+import modifiers
+import geometry
+import physics
+import material
+import lights
+import animations
+import utils
+from utils import PlasmaConfigParser
 import os
+
+from io_utils import ExportHelper
 
 class VisibleObjectStuff: #do YOU have a better name for it? ;P
     def __init__(self, agename, pagename):
@@ -47,8 +49,8 @@ def convert_version(spv):
         return pvPrime
     elif spv == "PVPOTS":
         return pvPots
-    elif spv == "PVLIVE":
-        return pvLive
+    elif spv == "PVMOUL":
+        return pvMoul
     elif spv == "PVEOA":
         return pvEoa
     elif spv == "PVHEX":
@@ -68,19 +70,19 @@ def export_scene_as_prp(rm, loc, blscene, agename, path):
     rm.AddPage(page)
     fullpagename = "%s_District_%s.prp"%(page.age, page.page)
     print("Writing Page %s"%fullpagename)
-    rm.WritePage(os.path.join(path,fullpagename), page)
+    rm.WritePage(os.path.join(os.path.dirname(path),fullpagename), page)
     GeoMgr = None #clean up
 
-class PlasmaExportAge(bpy.types.Operator):
+class PlasmaExportAge(bpy.types.Operator, ExportHelper):
     '''Export as Plasma Age'''
     bl_idname = "export.plasmaage"
     bl_label = "Export Age"
 
+    filename_ext = ".age"
+    filter_glob = StringProperty(default="*.age", options={'HIDDEN'})
+
     def execute(self, context):
         cfg = PlasmaConfigParser()
-        exportpath = cfg.get('Paths', 'exportpath')
-        if exportpath == None:
-            raise Exception("Can't find variable exportpath in config.")
         if len(bpy.data.worlds) > 1:
             raise Exception("Multiple worlds have been detected, please delete all except one of them to continue.")
 
@@ -89,9 +91,10 @@ class PlasmaExportAge(bpy.types.Operator):
         if not agename:
             raise Exception("You must give your age a name!")
         print("Cleaning up old files...",end=" ")
-        export_clean(exportpath, agename)
+        export_clean(filepath, agename)
         print("Done")
         pversion = convert_version(plsettings.plasmaversion)
+        print(pversion)
         rm = plResManager(pversion)
         ageinfo = plAgeInfo()
         ageinfo.name = agename
@@ -103,33 +106,34 @@ class PlasmaExportAge(bpy.types.Operator):
         if plsettings.startdaytime > 0:
             ageinfo.startDayTime = plsettings.startdaytime
         print("Commencing export of Scenes/Pages")
+        pageid = 0
         for scene in bpy.data.scenes:
             if not scene.plasma_page.isexport:
                 print("Skipping Export of Page: \"%s\""%scene.name)
                 continue
             print("Exporting Page: \"%s\""%scene.name)
-            pageid = scene.plasma_page.id
             loc = plLocation()
             loc.page = int(pageid)
             loc.prefix = int(plsettings.prefix)
-            export_scene_as_prp(rm, loc, scene, agename, exportpath)
+            export_scene_as_prp(rm, loc, scene, agename, filepath)
             pageflags = 0
             if not scene.plasma_page.load:
                 pgflags  |= kFlagPreventAutoLoad
             ageinfo.addPage((scene.name,pageid,pageflags))
-        print("Writing age file to %s"%os.path.join(exportpath,agename+".age"))
-        ageinfo.writeToFile(os.path.join(exportpath,agename+".age"), pversion)
+            pageid += 1
+        print("Writing age file to %s"%os.path.join(filepath,agename+".age"))
+        ageinfo.writeToFile(os.path.join(filepath,agename+".age"), pversion)
         print("Writing fni file...")
         #just make something default for now
         fnifile = plEncryptedStream(pversion)
-        fnifile.open(os.path.join(exportpath,agename+".fni"), fmWrite, plEncryptedStream.kEncAuto)
+        fnifile.open(os.path.join(filepath,agename+".fni"), fmWrite, plEncryptedStream.kEncAuto)
         fnifile.writeLine("Graphics.Renderer.Setyon 1000000")
         fnifile.writeLine("Graphics.Renderer.Fog.SetDefColor 0 0 0")
         fnifile.writeLine("Graphics.Renderer.SetClearColor 0 0 0")
         fnifile.close()
         print("Writing sum file...")
         sumfile = plEncryptedStream(pversion)
-        sumfile.open(os.path.join(exportpath,agename+".sum"), fmWrite, plEncryptedStream.kEncAuto)
+        sumfile.open(os.path.join(filepath,agename+".sum"), fmWrite, plEncryptedStream.kEncAuto)
         sumfile.writeInt(0)
         sumfile.writeInt(0)
         sumfile.close()
@@ -137,21 +141,19 @@ class PlasmaExportAge(bpy.types.Operator):
         print("Export Complete")
         return {'FINISHED'}
 
-class PlasmaExportResourcePage(bpy.types.Operator):
+class PlasmaExportResourcePage(bpy.types.Operator, ExportHelper):
     '''Export as Plasma Resource Page'''
     bl_idname = "export.plasmaprp"
     bl_label = "Export PRP"
 
-    filename = StringProperty(name="File Name")
-    directory = StringProperty(name="Directory")
-    path = StringProperty(name="File Path", description="File path used for exporting the PRP file", maxlen= 1024, default= "")
-    use_setting = BoolProperty(name="Example Boolean", description="Example Tooltip", default= True)
+    filename_ext = ".prp"
+    filter_glob = StringProperty(default="*.prp", options={'HIDDEN'})
 
     version = EnumProperty(attr="plasma_version",
                               items=(
                                   ("PVPRIME", "Plasma 2.0 (59.11)", "Ages Beyond Myst, To D'ni, Untìl Uru"),
                                   ("PVPOTS", "Plasma 2.0 (59.12)", "Path of the Shell, Complete  Chronicles"),
-                                  ("PVLIVE", "Plasma 2.0 (70.9)", "Myst Online: Uru Live, MOULagain, MagiQuest Online"),
+                                  ("PVMOUL", "Plasma 2.0 (70.9)", "Myst Online: Uru Live, MOULagain, MagiQuest Online"),
                                   ("PVEOA", "Plasma 2.1", "End of Ages, Crowthistle"),
                                   ("PVHEX", "Plasma 3.0", "HexIsle")
                               ),
@@ -176,19 +178,16 @@ class PlasmaExportResourcePage(bpy.types.Operator):
         loc = plLocation()
         loc.page = 0
         loc.prefix = plsettings.prefix
-        export_scene_as_prp(rm, loc, bpy.data.scenes[0], agename, self.properties.path)
+        export_scene_as_prp(rm, loc, bpy.data.scenes[0], agename, self.properties.filepath)
         print("Export Complete")
         return {'FINISHED'}
-    def invoke(self, context, event):
-        wm = context.manager
-        wm.add_fileselect(self) # will run self.execute()
-        return {'RUNNING_MODAL'}
+
 
 def ExportAvAnimPage():  #this function is so hacky it should be euthanized along with the companion cube
     cfg = PlasmaConfigParser()
-    exportpath = cfg.get('Paths', 'exportpath')
-    if exportpath == None:
-        raise Exception("Can't find variable exportpath in config.")
+    filepath = cfg.get('Paths', 'filepath')
+    if filepath == None:
+        raise Exception("Can't find variable filepath in config.")
     if len(bpy.data.worlds) > 1:
         raise Exception("Multiple worlds have been detected, please delete all except one of them to continue.")
     try:
@@ -220,7 +219,7 @@ def ExportAvAnimPage():  #this function is so hacky it should be euthanized alon
     rm.AddPage(page)
     fullpagename = "%s_District_%s.prp"%(page.age, page.page)
     print("Writing Page %s"%fullpagename)
-    rm.WritePage(os.path.join(exportpath,fullpagename), page)
+    rm.WritePage(os.path.join(filepath,fullpagename), page)
 
 
 class PlasmaExport(bpy.types.Operator):
@@ -345,3 +344,10 @@ def ExportSimInterface(rm,loc,blObj,so):
     si.physical = physics.plPhysicalPanel.Export(rm,loc,blObj,so).key
     return si
 
+def register():
+    bpy.utils.register_class(PlasmaExportAge)
+    bpy.utils.register_class(PlasmaExportResourcePage)
+
+def unregister():
+    bpy.utils.unregister_class(PlasmaExportResourcePage)
+    bpy.utils.unregister_class(PlasmaExportAge)

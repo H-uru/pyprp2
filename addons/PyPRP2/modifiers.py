@@ -34,7 +34,7 @@ class PlasmaModifierMenu(bpy.types.Menu):
     submenus = []
 
     __menuid = 'PlasmaModifierCat{0}'
-    __menucls = "class {0}(bpy.types.Menu):\n    bl_idname = '{0}'\n    bl_label = '{1}'\n    def draw(self, context):\n        self.layout.operator_context = 'EXEC_AREA'\nbpy.types.register({0})"
+    __menucls = "class {0}(bpy.types.Menu):\n    bl_idname = '{0}'\n    bl_label = '{1}'\n    def draw(self, context):\n        self.layout.operator_context = 'EXEC_AREA'\nbpy.utils.register_class({0})"
 
     @staticmethod
     def AddCategory(name):
@@ -58,7 +58,7 @@ class PlasmaModifierMenu(bpy.types.Menu):
         for mnu in PlasmaModifierMenu.submenus:
             layout.menu(mnu)
 
-class PlasmaModifierSettings(bpy.types.IDPropertyGroup):
+class PlasmaModifierSettings(bpy.types.PropertyGroup):
     modclass = StringProperty(attr = 'modclass', name = 'Type', default = '')
 
 class PlasmaModifierRemove(bpy.types.Operator):
@@ -111,9 +111,25 @@ class PlasmaModifierPanel(bpy.types.Panel):
             
 
 def register():
+    bpy.utils.register_class(PlasmaModifierMenu)
+    bpy.utils.register_class(PlasmaModifierSettings)
+    bpy.utils.register_class(PlasmaModifierRemove)
+    bpy.utils.register_class(PlasmaModifierPanel)
     modpath = os.path.join(os.path.split(__file__)[0],"mods/")
     mods = [fname[:-3] for fname in os.listdir(modpath) if fname.endswith('.py')]
     if not modpath in sys.path:
         sys.path.append(modpath)
     modifiers = [__import__(mname) for mname in mods]
     [[PlasmaModifierMenu.AddModifier(bmod) for bmod in mod.register()] for mod in modifiers]
+
+def unregister():
+    modpath = os.path.join(os.path.split(__file__)[0],"mods/")
+    mods = [fname[:-3] for fname in os.listdir(modpath) if fname.endswith('.py')]
+    if not modpath in sys.path:
+        sys.path.append(modpath)
+    modifiers = [__import__(mname) for mname in mods]
+    [mod.unregister() for mod in modifiers]
+    bpy.utils.unregister_class(PlasmaModifierPanel)
+    bpy.utils.unregister_class(PlasmaModifierRemove)
+    bpy.utils.unregister_class(PlasmaModifierSettings)
+    bpy.utils.unregister_class(PlasmaModifierMenu)

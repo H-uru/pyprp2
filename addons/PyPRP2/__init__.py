@@ -16,27 +16,34 @@
 #    You should have received a copy of the GNU General Public License
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
-bl_addon_info = {
+bl_info = {
     'name': 'Plasma Development Environment',
     'author': 'PyPRP2 Project Team',
-    'version': '0.0.1',
-    'blender': (2, 5, 6),
+    'version': (1,),
+    'blender': (2, 5, 7),
+    'api': 36138,       # The official 2.57 build
     'location': 'View3D > Plasma',
     'description': 'Plasma engine settings and development tools.',
-    'url': 'http://www.guildofwriters.com/wiki/',
-    'category': 'Import/Export'}
+    'warning': 'beta',
+#    'url': 'http://www.guildofwriters.com/wiki/',
+    'category': 'Import-Export'}
 
 
+# this is a dirty dirty hack
+import os
+import sys
+sys.path.insert(0, os.path.dirname(__file__))
 
 
 import bpy
 from bpy.props import *
-import properties_data_modifier,space_info
-from . import headers
-from . import physics
-from . import modifiers
-from . import world
-from . import object
+from bl_ui import properties_data_modifier,space_info
+import headers
+import geometry
+import modifiers
+import physics
+import world
+import object
 
 ##hide = [
 ##    bpy.types.CLOTH_MT_presets,
@@ -70,9 +77,9 @@ from . import object
 
 
 #maybe try to get this class moved to the object module
-class PlasmaObjectSettings(bpy.types.IDPropertyGroup):
-    physics = PointerProperty(attr = 'physics', type = bpy.types.PlasmaPhysicsSettings)
-    modifiers = CollectionProperty(attr = 'modifiers', type = bpy.types.PlasmaModifierSettings)
+class PlasmaObjectSettings(bpy.types.PropertyGroup):
+    physics = PointerProperty(attr = 'physics', type = physics.PlasmaPhysicsSettings)
+    modifiers = CollectionProperty(attr = 'modifiers', type = modifiers.PlasmaModifierSettings)
 
     drawableoverride = BoolProperty(name="Drawable Override", default = False)
     activemodifier = IntProperty(attr = 'activemodifier', default = 0)
@@ -85,31 +92,38 @@ class PlasmaObjectSettings(bpy.types.IDPropertyGroup):
 ##        unregister(cls)
 
 def register():
+    headers.register()
+    geometry.register()
+    modifiers.register()
+    physics.register()
+    world.register()
+    object.register()
+    bpy.utils.register_class(PlasmaObjectSettings)
     bpy.types.Object.plasma_settings = PointerProperty(attr = 'plasma_settings',
-                                                       type = bpy.types.PlasmaObjectSettings,
+                                                       type = PlasmaObjectSettings,
                                                        name = 'Plasma Settings',
                                                        description = 'Plasma Engine Object Settings')
     bpy.types.World.plasma_age = PointerProperty(attr = 'plasma_age',
-                                                     type = bpy.types.PlasmaAgeSettings,
+                                                     type = world.PlasmaAgeSettings,
                                                      name = 'Plasma Settings',
                                                      description = 'Plasma Engine Object Settings')
     
     bpy.types.Scene.plasma_page = PointerProperty(attr = 'plasma_page',
-                                                       type = bpy.types.PlasmaPageSettings,
+                                                       type = world.PlasmaPageSettings,
                                                        name = 'Plasma Settings',
                                                        description = 'Plasma Engine Object Settings')
 
 ##    disable_panels()
-    headers.register()
-    modifiers.register()
-    geometry.register()
-    physics.register()
-    world.register()
-    object.register()
     #bpy.types.unregister(bpy.types.INFO_HT_header)
 
 def unregister():
-    pass
+    bpy.utils.unregister_class(PlasmaObjectSettings)
+    object.unregister()
+    world.unregister()
+    physics.unregister()
+    modifiers.unregister()
+    geometry.unregister()
+    headers.unregister()
 
 if __name__ == "__main__":
     register()

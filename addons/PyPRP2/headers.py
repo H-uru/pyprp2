@@ -16,34 +16,30 @@
 #    You should have received a copy of the GNU General Public License
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
-import bpy,space_info
+import bpy
+from bl_ui import space_info
 from bpy.props import *
-from . import exporter
-from . import importer
+import exporter
+import importer
 
-class INFO_MT_plasma(bpy.types.Menu):
-    bl_idname = "INFO_MT_plasma"
-    bl_label = "Plasma"
-
-    def draw(self, context):
-        layout = self.layout
-        layout.operator_context = 'EXEC_AREA'
-        layout.operator_menu_enum("export.plasmaexport","type", text="Export")
-        layout.operator_menu_enum("import.plasmaimport","type", text="Import")
+def menu_func_export(self, context):
+    self.layout.operator(exporter.PlasmaExportAge.bl_idname, text="Plasma Age (.age)")
+    self.layout.operator(exporter.PlasmaExportResourcePage.bl_idname, text="Plasma Page (.prp)")
 
 
-class INFO_HT_header(space_info.INFO_HT_header):
-    def draw(self, context):
-        space_info.INFO_HT_header.draw(self,context)
-        
-        layout = self.layout
-        sub = layout.row(align=True)
-        sub.menu("INFO_MT_plasma")
+def menu_func_import(self, context):
+    self.layout.operator(importer.PlasmaImport.bl_idname, text="Plasma (.age)")
 
 def register():
-    pass
+    exporter.register()
+    importer.register()
+    bpy.types.INFO_MT_file_import.append(menu_func_import)
+    bpy.types.INFO_MT_file_export.append(menu_func_export)
 
-    
+
 def unregister():
-    pass
+    bpy.types.INFO_MT_file_import.remove(menu_func_import)
+    bpy.types.INFO_MT_file_export.remove(menu_func_export)
+    exporter.unregister()
+    importer.unregister()
 

@@ -19,10 +19,10 @@
 import bpy
 from bpy.props import *
 from PyHSPlasma import *
-from . import utils
+import PyPRP2.utils
 import mathutils
 
-class PlasmaPhysicsSettings(bpy.types.IDPropertyGroup):
+class PlasmaPhysicsSettings(bpy.types.PropertyGroup):
     enabled = BoolProperty(name="Physics Enabled", default=False)
     mass = FloatProperty(name="Mass",default=0.0,soft_min=0,soft_max=1000)
     friction = FloatProperty(name="Friction",default=0.5,soft_min=0,soft_max=10)
@@ -128,7 +128,10 @@ def BuildProxyBounds(blObj, dynamic):
     return verts, inds
 
 def register():
-    pass
+    bpy.utils.register_class(PlasmaPhysicsSettings)
+    bpy.utils.register_class(plPhysicalPanel)
 
 def unregister():
-    pass
+    bpy.utils.unregister_class(plPhysicalPanel)
+    bpy.utils.unregister_class(PlasmaPhysicsSettings)
+

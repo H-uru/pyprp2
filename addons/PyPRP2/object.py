@@ -33,8 +33,8 @@ class plObject(bpy.types.Panel):
         self.layout.prop(pl, "isdynamic")
 
 def register():
-    pass
+    bpy.utils.register_class(plObject)
 
 def unregister():
-    pass
+    bpy.utils.unregister_class(plObject)
 

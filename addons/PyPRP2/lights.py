@@ -18,7 +18,7 @@
 
 import bpy
 from PyHSPlasma import *
-from . import utils
+import utils
 
 
 def ExportLamp(rm, loc, blObj, vos, sceneobject):
@@ -132,11 +132,13 @@ def light_mesh(mesh, matrix_world, pllamp, vpaint):
         #unsupported type
         return
 
-    l_pos = utils.hsMatrix44_2_blMatrix44(pllamp.lightToWorld).translation_part()
+    l_pos = utils.hsMatrix44_2_blMatrix44(pllamp.lightToWorld).to_translation()
     for index_face, face in enumerate(mesh.faces):
         for index_v, vertexind in enumerate(face.vertices):
             v_pos = mesh.vertices[vertexind].co*matrix_world
-            dot = mesh.vertices[vertexind].normal.dot((l_pos-v_pos).normalize())
+            l_dir = (l_pos-v_pos)
+            l_dir.normalize()
+            dot = mesh.vertices[vertexind].normal.dot(l_dir)
             if dot < 0:
                 continue
             dist = (v_pos-l_pos).length

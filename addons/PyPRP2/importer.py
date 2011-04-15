@@ -22,7 +22,7 @@ import mathutils
 import os
 from PyHSPlasma import *
 from bpy.props import *
-from .utils import PlasmaConfigParser
+from utils import PlasmaConfigParser
 
 
 boneinclusion = ["handle","BookHandle","Convergence"]
@@ -102,5 +102,8 @@ def importAvatarArmatureSystem(path):
             blbone.head = blbone.tail
     bpy.ops.object.mode_set(mode='OBJECT')
 
+def register():
+    bpy.utils.register_class(PlasmaImport)
 
-        
+def unregister():
+    bpy.utils.unregister_class(PlasmaImport)

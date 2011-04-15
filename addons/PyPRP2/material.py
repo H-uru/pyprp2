@@ -18,7 +18,7 @@
 
 import bpy
 from PyHSPlasma import *
-from . import utils
+import utils
 import os
 import subprocess
 import hashlib
