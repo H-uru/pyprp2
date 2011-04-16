@@ -38,9 +38,9 @@ class PlasmaPhysicsSettings(bpy.types.PropertyGroup):
             ),
             name="Bounds Type",
             description="Bounds Type",
-            default="3")
-    subworld = StringProperty()
-    sndgroup = StringProperty()
+            default="4")
+    #subworld = StringProperty()
+    #sndgroup = StringProperty()
     radius = FloatProperty(name="Radius",default=1.0,soft_min=0,soft_max=10000)
     
 class plPhysicalPanel(bpy.types.Panel):
@@ -63,10 +63,10 @@ class plPhysicalPanel(bpy.types.Panel):
         layout.prop(ph, "mass")
         layout.prop(ph, "friction")
         layout.prop(ph, "restitution")
-        layout.label(text="SubWorld:")
-        layout.prop(ph, "subworld")
-        layout.label(text="Sound Group:")
-        layout.prop(ph, "sndgroup")
+        #layout.label(text="SubWorld:")
+        #layout.prop(ph, "subworld")
+        #layout.label(text="Sound Group:")
+        #layout.prop(ph, "sndgroup")
         layout.label(text="Bounds Type:")
         layout.prop(ph, "bounds", text="")
         if ph.bounds == "2":
