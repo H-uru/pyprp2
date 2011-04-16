@@ -88,6 +88,8 @@ class PlasmaExportAge(bpy.types.Operator):
         agedir = plsettings.export_dir
         if not agename:
             raise Exception("You must give your age a name!")
+        if not agedir:
+            raise Exception("You must specify an export directory!")
         print("Cleaning up old files...",end=" ")
         export_clean(agedir, agename)
         print("Done")
