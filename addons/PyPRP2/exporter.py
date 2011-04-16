@@ -30,8 +30,6 @@ import utils
 from utils import PlasmaConfigParser
 import os
 
-from io_utils import ExportHelper
-
 class VisibleObjectStuff: #do YOU have a better name for it? ;P
     def __init__(self, agename, pagename):
         self.geomgr = geometry.GeometryManager(agename, pagename)
@@ -73,7 +71,7 @@ def export_scene_as_prp(rm, loc, blscene, agename, path):
     rm.WritePage(os.path.join(os.path.dirname(path),fullpagename), page)
     GeoMgr = None #clean up
 
-class PlasmaExportAge(bpy.types.Operator, ExportHelper):
+class PlasmaExportAge(bpy.types.Operator):
     '''Export as Plasma Age'''
     bl_idname = "export.plasmaage"
     bl_label = "Export Age"
@@ -82,16 +80,16 @@ class PlasmaExportAge(bpy.types.Operator, ExportHelper):
     filter_glob = StringProperty(default="*.age", options={'HIDDEN'})
 
     def execute(self, context):
-        cfg = PlasmaConfigParser()
         if len(bpy.data.worlds) > 1:
             raise Exception("Multiple worlds have been detected, please delete all except one of them to continue.")
 
         plsettings = bpy.data.worlds[0].plasma_age        
         agename = plsettings.name
+        agedir = plsettings.export_dir
         if not agename:
             raise Exception("You must give your age a name!")
         print("Cleaning up old files...",end=" ")
-        export_clean(filepath, agename)
+        export_clean(agedir, agename)
         print("Done")
         pversion = convert_version(plsettings.plasmaversion)
         print(pversion)
@@ -115,25 +113,25 @@ class PlasmaExportAge(bpy.types.Operator, ExportHelper):
             loc = plLocation()
             loc.page = int(pageid)
             loc.prefix = int(plsettings.prefix)
-            export_scene_as_prp(rm, loc, scene, agename, filepath)
+            export_scene_as_prp(rm, loc, scene, agename, agedir)
             pageflags = 0
             if not scene.plasma_page.load:
                 pgflags  |= kFlagPreventAutoLoad
             ageinfo.addPage((scene.name,pageid,pageflags))
             pageid += 1
-        print("Writing age file to %s"%os.path.join(filepath,agename+".age"))
-        ageinfo.writeToFile(os.path.join(filepath,agename+".age"), pversion)
+        print("Writing age file to %s"%os.path.join(agedir,agename+".age"))
+        ageinfo.writeToFile(os.path.join(agedir,agename+".age"), pversion)
         print("Writing fni file...")
         #just make something default for now
         fnifile = plEncryptedStream(pversion)
-        fnifile.open(os.path.join(filepath,agename+".fni"), fmWrite, plEncryptedStream.kEncAuto)
+        fnifile.open(os.path.join(agedir,agename+".fni"), fmWrite, plEncryptedStream.kEncAuto)
         fnifile.writeLine("Graphics.Renderer.Setyon 1000000")
         fnifile.writeLine("Graphics.Renderer.Fog.SetDefColor 0 0 0")
         fnifile.writeLine("Graphics.Renderer.SetClearColor 0 0 0")
         fnifile.close()
         print("Writing sum file...")
         sumfile = plEncryptedStream(pversion)
-        sumfile.open(os.path.join(filepath,agename+".sum"), fmWrite, plEncryptedStream.kEncAuto)
+        sumfile.open(os.path.join(agedir,agename+".sum"), fmWrite, plEncryptedStream.kEncAuto)
         sumfile.writeInt(0)
         sumfile.writeInt(0)
         sumfile.close()
@@ -141,7 +139,7 @@ class PlasmaExportAge(bpy.types.Operator, ExportHelper):
         print("Export Complete")
         return {'FINISHED'}
 
-class PlasmaExportResourcePage(bpy.types.Operator, ExportHelper):
+class PlasmaExportResourcePage(bpy.types.Operator):
     '''Export as Plasma Resource Page'''
     bl_idname = "export.plasmaprp"
     bl_label = "Export PRP"
@@ -170,15 +168,15 @@ class PlasmaExportResourcePage(bpy.types.Operator, ExportHelper):
             plsettings = bpy.data.worlds[0].plasma_age
         except:
             raise Exception("Please go take a look at your world settings.  That's the little globe button.")
-        cfg = PlasmaConfigParser()
         
         agename = plsettings.name
+        agedir = plsettings.export_dir
         rm = plResManager(convert_version(self.properties.version))
         i = 0
         loc = plLocation()
         loc.page = 0
         loc.prefix = plsettings.prefix
-        export_scene_as_prp(rm, loc, bpy.data.scenes[0], agename, self.properties.filepath)
+        export_scene_as_prp(rm, loc, bpy.data.scenes[0], agename, agedir)
         print("Export Complete")
         return {'FINISHED'}
 

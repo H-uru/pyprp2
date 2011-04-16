@@ -25,7 +25,8 @@ randomint = random.randint(100, 200)
 
 
 class PlasmaAgeSettings(bpy.types.PropertyGroup):
-    name = StringProperty(name='Age Name')
+    name = StringProperty(name='Age Name', subtype='FILENAME')
+    export_dir = StringProperty(name='Export Path', subtype='DIR_PATH')
     prefix = IntProperty(name='Unique Age Prefix', default=randomint, soft_min=0, soft_max=20000)
     plasmaversion = EnumProperty(items=(
                                       ('PVPRIME', 'Plasma 2.0 (59.11)', 'Ages Beyond Myst, To D\'ni, Untìl Uru'),
@@ -64,6 +65,7 @@ class plAgeSettingsPanel(bpy.types.Panel):
         pl = view.plasma_age
         
         layout.prop(pl, 'name')
+        layout.prop(pl, 'export_dir')
         layout.prop(pl, 'plasmaversion')
         layout.prop(pl, 'prefix')
         if pl.prefix >= 100 and pl.prefix <= 200:
