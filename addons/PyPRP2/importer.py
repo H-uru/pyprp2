@@ -22,7 +22,6 @@ import mathutils
 import os
 from PyHSPlasma import *
 from bpy.props import *
-from utils import PlasmaConfigParser
 
 
 boneinclusion = ["handle","BookHandle","Convergence"]

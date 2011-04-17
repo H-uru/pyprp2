@@ -21,7 +21,6 @@ from PyHSPlasma import *
 import utils
 import material
 import lights
-from utils import PlasmaConfigParser
 
 alpha_names = ['alpha', 'Alpha']
 colour_names = ['colour', 'color', 'col', 'Colour', 'Color', 'Col']
@@ -294,9 +293,8 @@ class AdvRenderLevelPanel(bpy.types.Panel):
 
     @classmethod
     def poll(self, context):
-        cfg = PlasmaConfigParser()
-        if cfg.getboolean('Advanced', 'iamyeesha'):
-            return context.mesh
+        if context.world.plasma_age.isadvanced:
+          return True
         return False
 
     def draw(self, context):

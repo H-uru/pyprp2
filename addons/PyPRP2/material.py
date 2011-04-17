@@ -52,10 +52,11 @@ def SetLayerFlags(slot,layer,material):
     if material.type == "WIRE":
         layer.state.miscFlags |= hsGMatState.kMiscWireFrame
 
-def HandleMipmap(texture, config):
+def HandleMipmap(texture):
     srcpath = bpy.path.abspath(texture.image.filepath)
-    cachepath = config.get('Paths', 'texcachepath')
-    exepath = config.get('Paths', 'executablepath')
+    cachepath = os.path.join(bpy.data.worlds[0].plasma_age.export_dir, "texcache")
+    # TODO: Make this work when buildplmipmap is somewhere else on the system path
+    exepath = os.path.split(bpy.app.binary_path)[0]
     buildplmipmap_path = os.path.join(exepath, "buildplmipmap")
     imagename = os.path.split(srcpath)[1]
     cachename = os.path.splitext(imagename)[0]
@@ -66,6 +67,9 @@ def HandleMipmap(texture, config):
     files_exist = False
     src_checksum = None
     have_to_process = True
+    
+    if not os.path.exists(cachepath):
+        os.mkdir(cachepath)     # mkdirs isn't necessary - the exporter will have guaranteed the parent exists by now
 
     try:
         open(cachefilepathfull)#this shouldn't create a memory leak
@@ -106,7 +110,6 @@ def HandleMipmap(texture, config):
 def ExportMaterial(rm, loc, material):
     mat = hsGMaterial(material.name)
     rm.AddObject(loc,mat)
-    config = utils.PlasmaConfigParser()
 
     for slot in material.texture_slots:
         if slot:
@@ -119,7 +122,7 @@ def ExportMaterial(rm, loc, material):
                 pass
             elif texture.type == "IMAGE":
                 if texture.image.source == "FILE":
-                    mm = HandleMipmap(texture, config)
+                    mm = HandleMipmap(texture)
                     rm.AddObject(loc,mm)
                     layer.texture = mm.key
             else:

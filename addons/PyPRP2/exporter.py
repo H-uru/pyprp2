@@ -27,7 +27,6 @@ import material
 import lights
 import animations
 import utils
-from utils import PlasmaConfigParser
 import os
 
 class VisibleObjectStuff: #do YOU have a better name for it? ;P
@@ -90,6 +89,8 @@ class PlasmaExportAge(bpy.types.Operator):
             raise Exception("You must give your age a name!")
         if not agedir:
             raise Exception("You must specify an export directory!")
+        if not os.path.exists(agedir):
+            os.mkdir(agedir)
         print("Cleaning up old files...",end=" ")
         export_clean(agedir, agename)
         print("Done")
