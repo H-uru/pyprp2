@@ -200,7 +200,7 @@ def ExportAvAnimPage():  #this function is so hacky it should be euthanized alon
     if len(bpy.data.worlds) > 1:
         raise Exception("Multiple worlds have been detected, please delete all except one of them to continue.")
     try:
-        plsettings = bpy.data.worlds[0].plasma_settings
+        plsettings = bpy.context.scene.world.plasma_age
     except:
         raise Exception("Please go take a look at your world settings.  That's the little globe button.")            
     agename = plsettings.agename
