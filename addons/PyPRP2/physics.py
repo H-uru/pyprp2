@@ -19,7 +19,6 @@
 import bpy
 from bpy.props import *
 from PyHSPlasma import *
-import PyPRP2.utils
 import mathutils
 
 class PlasmaPhysicsSettings(bpy.types.PropertyGroup):

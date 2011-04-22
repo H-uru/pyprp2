@@ -22,6 +22,8 @@ import utils
 import material
 import lights
 
+kMaxNumVertsPerBuffer = 32000
+
 alpha_names = ['alpha', 'Alpha']
 colour_names = ['colour', 'color', 'col', 'Colour', 'Color', 'Col']
 
@@ -153,7 +155,7 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         return len(self.dspans_list)-1
     
     def FindOrCreateBufferGroup(self, dspansind, UVCount,num_vertexs):
-        if num_vertexs >= 0x8000:
+        if num_vertexs >= kMaxNumVertsPerBuffer:
             raise Exception("Too many verts.")
         dspans,buffergroupinfos = self.dspans_list[dspansind]
         for idx in range(len(dspans.bufferGroups)):
@@ -212,7 +214,8 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
             auto_bake_paint = mesh.vertex_colors.get("autobake")
             if not auto_bake_paint:
                 auto_bake_paint = mesh.vertex_colors.new("autobake")
-            lights.set_vertex_color_black(auto_bake_paint)
+            amb = tuple(bpy.context.scene.world.ambient_color)
+            lights.set_vertex_color(auto_bake_paint, amb)
             for lightkey in light_keys.values():
                 lights.light_mesh(blObj.data, blObj.matrix_world, lightkey.object, auto_bake_paint)
     
@@ -285,44 +288,45 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         dspans.addDIIndex(di_ind_obj)
         return dspans,(len(dspans.DIIndices)-1)
 
-class AdvRenderLevelPanel(bpy.types.Panel):
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = 'data'
-    bl_label = 'Render Flags'
-
-    @classmethod
-    def poll(self, context):
-        if context.world.plasma_age.isadvanced:
-          return True
-        return False
-
-    def draw(self, context):
-        layout = self.layout
-        ob = context.object
-
-        row = layout.row()
-        col = row.column()
-        col.label(text = 'Major')
-        col.label(text = 'Opaque')
-        col.label(text = 'FB')
-        col.label(text = 'DefRend')
-        col.label(text = 'Blend')
-        col.label(text = 'Late')
-
-        col = row.column()
-        col.label(text = 'Minor')
-        col.label(text = 'Opaque')
-        col.label(text = 'FB')
-        col.label(text = 'DefRend')
-        col.label(text = 'Blend')
-        col.label(text = 'Late')
-
-        layout.label(text = 'DANGER! This will likely cause rendering errors in Plasma!')
-        layout.prop(ob.plasma_settings, 'drawableoverride')
-
-def register():
-    bpy.utils.register_class(AdvRenderLevelPanel)
-
-def unregister():
-    bpy.utils.unregister_class(AdvRenderLevelPanel)
+##class AdvRenderLevelPanel(bpy.types.Panel):
+##    bl_space_type = 'PROPERTIES'
+##    bl_region_type = 'WINDOW'
+##    bl_context = 'data'
+##    bl_label = 'Render Flags'
+##
+##    @classmethod
+##    def poll(self, context):
+##        if context.world.plasma_age.isadvanced:
+##          return True
+##        return False
+##
+##    def draw(self, context):
+##        layout = self.layout
+##        ob = context.object
+##
+##        row = layout.row()
+##        col = row.column()
+##        col.label(text = 'Major')
+##        col.label(text = 'Opaque')
+##        col.label(text = 'FB')
+##        col.label(text = 'DefRend')
+##        col.label(text = 'Blend')
+##        col.label(text = 'Late')
+##
+##        col = row.column()
+##        col.label(text = 'Minor')
+##        col.label(text = 'Opaque')
+##        col.label(text = 'FB')
+##        col.label(text = 'DefRend')
+##        col.label(text = 'Blend')
+##        col.label(text = 'Late')
+##
+##        layout.label(text = 'DANGER! This will likely cause rendering errors in Plasma!')
+##        layout.prop(ob.plasma_settings, 'drawableoverride')
+##
+##def register():
+##    bpy.utils.register_class(AdvRenderLevelPanel)
+##
+##def unregister():
+##    bpy.utils.unregister_class(AdvRenderLevelPanel)
+##

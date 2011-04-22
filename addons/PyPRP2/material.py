@@ -54,7 +54,7 @@ def SetLayerFlags(slot,layer,material):
 
 def HandleMipmap(texture):
     srcpath = bpy.path.abspath(texture.image.filepath)
-    cachepath = os.path.join(bpy.data.worlds[0].plasma_age.export_dir, "texcache")
+    cachepath = os.path.join(bpy.path.abspath(bpy.data.worlds[0].plasma_age.export_dir), "texcache")
     # TODO: Make this work when buildplmipmap is somewhere else on the system path
     exepath = os.path.split(bpy.app.binary_path)[0]
     buildplmipmap_path = os.path.join(exepath, "buildplmipmap")

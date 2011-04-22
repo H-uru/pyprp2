@@ -18,6 +18,17 @@
 import bpy
 from bpy.props import *
 from PyHSPlasma import *
+from PyPRP2 import modifiers
+from PyPRP2 import physics
+
+class PlasmaObjectSettings(bpy.types.PropertyGroup):
+    physics = PointerProperty(attr = 'physics', type = physics.PlasmaPhysicsSettings)
+    modifiers = CollectionProperty(attr = 'modifiers', type = modifiers.PlasmaModifierSettings)
+
+    drawableoverride = BoolProperty(name="Drawable Override", default = False)
+    activemodifier = IntProperty(attr = 'activemodifier', default = 0)
+    isdrawable = BoolProperty(name="Is Drawable", default=True, description="Export drawable for this object")
+    isdynamic = BoolProperty(name="Dynamic", default=False)
 
 class plObject(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
@@ -34,7 +45,13 @@ class plObject(bpy.types.Panel):
 
 def register():
     bpy.utils.register_class(plObject)
+    modifiers.register()
+    physics.register()
+    bpy.utils.register_class(PlasmaObjectSettings)
 
 def unregister():
+    bpy.utils.unregister_class(PlasmaObjectSettings)
+    physics.unregister()
+    modifiers.unregister()
     bpy.utils.unregister_class(plObject)
 

@@ -109,12 +109,12 @@ def ExportLamp(rm, loc, blObj, vos, sceneobject):
 ##Plasma Vert-Baking Code
 ##If someone thinks of a better place to put it, feel free to move it.
 
-def set_vertex_color_black(vcol): #is there a better way?
+def set_vertex_color(vcol, color):
     for i in vcol.data:
-        i.color1 = (0,0,0)
-        i.color2 = (0,0,0)
-        i.color3 = (0,0,0)
-        i.color4 = (0,0,0)
+        i.color1 = color
+        i.color2 = color
+        i.color3 = color
+        i.color4 = color
 
 def add_colors(col1, col2):
     #if the value is over one it will be changed to one automatically when it is set
