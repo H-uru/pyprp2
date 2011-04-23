@@ -142,14 +142,18 @@ class PlasmaExportAge(bpy.types.Operator):
         print("Writing age file to %s"%os.path.join(agedir,agename+".age"))
         ageinfo.writeToFile(os.path.join(agedir,agename+".age"), pversion)
         print("Writing fni file...")
+        if pversion in [pvPrime, pvPots, pvMoul]:
+            enc = plEncryptedStream.kEncXtea
+        else:
+            enc = plEncryptedStream.kEncAuto
         fnifile = plEncryptedStream(pversion)
-        fnifile.open(os.path.join(agedir,agename+".fni"), fmWrite, plEncryptedStream.kEncAuto)
+        fnifile.open(os.path.join(agedir,agename+".fni"), fmWrite, enc)
         export_fog(fnifile, world)
         fnifile.close()
         if pversion != pvMoul:
             print("Writing sum file...")
             sumfile = plEncryptedStream(pversion)
-            sumfile.open(os.path.join(agedir,agename+".sum"), fmWrite, plEncryptedStream.kEncAuto)
+            sumfile.open(os.path.join(agedir,agename+".sum"), fmWrite, enc)
             sumfile.writeInt(0)
             sumfile.writeInt(0)
             sumfile.close()
