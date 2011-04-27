@@ -124,6 +124,8 @@ class PlasmaExportAge(bpy.types.Operator):
         if plsettings.startdaytime > 0:
             ageinfo.startDayTime = plsettings.startdaytime
         print("Commencing export of Scenes/Pages")
+        if context.mode != "OBJECT":
+            bpy.ops.object.mode_set(mode="OBJECT")
         pageid = 0
         for scene in bpy.data.scenes:
             if not scene.plasma_page.isexport:

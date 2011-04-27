@@ -225,6 +225,8 @@ class PlasmaVBakeLight(bpy.types.Operator):
     
     def execute(self, context):
         obj = context.object
+        if context.mode != "OBJECT":
+            bpy.ops.object.mode_set(mode="OBJECT")
         auto_bake_paint = obj.data.vertex_colors.get("autobake")
         if not auto_bake_paint:
             auto_bake_paint = obj.data.vertex_colors.new("autobake")
