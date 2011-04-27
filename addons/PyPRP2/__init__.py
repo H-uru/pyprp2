@@ -41,11 +41,13 @@ from bl_ui import properties_data_modifier,space_info
 import headers
 import world
 import object
+import geometry
 
 def register():
     headers.register()
     world.register()
     object.register()
+    geometry.register()
     bpy.types.Object.plasma_settings = PointerProperty(attr = 'plasma_settings',
                                                        type = object.PlasmaObjectSettings,
                                                        name = 'Plasma Settings',
@@ -61,6 +63,7 @@ def register():
                                                        description = 'Plasma Engine Object Settings')
 
 def unregister():
+    geometry.unregister()
     object.unregister()
     world.unregister()
     headers.unregister()

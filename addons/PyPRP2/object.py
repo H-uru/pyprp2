@@ -18,8 +18,8 @@
 import bpy
 from bpy.props import *
 from PyHSPlasma import *
-from PyPRP2 import modifiers
-from PyPRP2 import physics
+import modifiers
+import physics
 
 class PlasmaObjectSettings(bpy.types.PropertyGroup):
     physics = PointerProperty(attr = 'physics', type = physics.PlasmaPhysicsSettings)

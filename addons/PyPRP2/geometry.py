@@ -60,7 +60,7 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
         if vertex_color:
             cols = (vertex_color.data[i].color1, vertex_color.data[i].color2, vertex_color.data[i].color3, vertex_color.data[i].color4)
         else:
-            cols = ((0.0,1.0,1.0), (0.0,0.0,0.0), (0.0,0.0,0.0), (0.0,0.0,0.0))
+            cols = ((0.0,0.0,0.0), (0.0,0.0,0.0), (0.0,0.0,0.0), (0.0,0.0,0.0))
         #handle vertex alpha
         if vertex_alpha:
             vtx_alphas = (AverageRGB(vertex_alpha.data[i].color1), AverageRGB(vertex_alpha.data[i].color2), AverageRGB(vertex_alpha.data[i].color3), AverageRGB(vertex_alpha.data[i].color4))
@@ -84,8 +84,8 @@ def DigestBlMesh(mesh): #Let's hope for no indigestion.
                 plvert.normal = hsVector3(vert.normal[0],vert.normal[1], vert.normal[2]) #normal
                 plvert.UVWs = [hsVector3(face_uvs[uvi][j][0],1.0-face_uvs[uvi][j][1],0.0) for uvi in range(len(mesh.uv_textures))]
                 vcolor = cols[j]
-
-                plvert.color = hsColor32(int(round(vcolor[0]*255)), int(round(vcolor[1]*255)), int(round(vcolor[2]*255)), int(round(vtx_alphas[j]*255))).color
+                #Engine expects BGRA format
+                plvert.color = hsColor32(int(round(vcolor[2]*255)), int(round(vcolor[1]*255)), int(round(vcolor[0]*255)), int(round(vtx_alphas[j]*255))).color
 
                 plasma_vert_dict[vertidx][secondkey] = plvert
                 vertex=plvert
@@ -160,7 +160,7 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         dspans,buffergroupinfos = self.dspans_list[dspansind]
         for idx in range(len(dspans.bufferGroups)):
             bufferGroup=dspans.bufferGroups[idx]
-            if bufferGroup.numUVs==UVCount and len(buffergroupinfos[idx].verts_to_be_written)+num_vertexs < 0x8000:
+            if bufferGroup.numUVs==UVCount and len(buffergroupinfos[idx].verts_to_be_written)+num_vertexs < kMaxNumVertsPerBuffer:
                 return idx
         #not found - create a new bufferGroup with the required format
         bgformat = 0
@@ -288,45 +288,27 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         dspans.addDIIndex(di_ind_obj)
         return dspans,(len(dspans.DIIndices)-1)
 
-##class AdvRenderLevelPanel(bpy.types.Panel):
-##    bl_space_type = 'PROPERTIES'
-##    bl_region_type = 'WINDOW'
-##    bl_context = 'data'
-##    bl_label = 'Render Flags'
-##
-##    @classmethod
-##    def poll(self, context):
-##        if context.world.plasma_age.isadvanced:
-##          return True
-##        return False
-##
-##    def draw(self, context):
-##        layout = self.layout
-##        ob = context.object
-##
-##        row = layout.row()
-##        col = row.column()
-##        col.label(text = 'Major')
-##        col.label(text = 'Opaque')
-##        col.label(text = 'FB')
-##        col.label(text = 'DefRend')
-##        col.label(text = 'Blend')
-##        col.label(text = 'Late')
-##
-##        col = row.column()
-##        col.label(text = 'Minor')
-##        col.label(text = 'Opaque')
-##        col.label(text = 'FB')
-##        col.label(text = 'DefRend')
-##        col.label(text = 'Blend')
-##        col.label(text = 'Late')
-##
-##        layout.label(text = 'DANGER! This will likely cause rendering errors in Plasma!')
-##        layout.prop(ob.plasma_settings, 'drawableoverride')
-##
-##def register():
-##    bpy.utils.register_class(AdvRenderLevelPanel)
-##
-##def unregister():
-##    bpy.utils.unregister_class(AdvRenderLevelPanel)
-##
+class plGeometryPanel(bpy.types.Panel):
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "data"
+    bl_label = "Plasma Geometry"
+
+    @classmethod
+    def poll(cls, context):
+        return (context.object.type == "MESH")
+
+    def draw(self, context):
+        layout = self.layout
+        box = layout.box()
+        box.label(text = "Vertex Lightbake Object")
+        box.operator("object.plasma_vbake_light")
+
+def register():
+    lights.register()
+    bpy.utils.register_class(plGeometryPanel)
+
+def unregister():
+    lights.register()
+    bpy.utils.unregister_class(plGeometryPanel)
+

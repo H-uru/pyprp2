@@ -298,7 +298,7 @@ def ExportSceneObject(rm,loc,blObj, vos):
     if blObj.type == "LAMP":
         hasCI = True #force CI for lamp
         #this lamp code crashes.  I believe the light object becomes corrupted as data is added to it.
-        light = lights.ExportLamp(rm, loc, blObj, vos, so).key
+        light = lights.ExportLamp(rm, loc, blObj, so).key
         vos.lights[blObj] = light
         so.addInterface(light)
     elif blObj.type == "EMPTY":

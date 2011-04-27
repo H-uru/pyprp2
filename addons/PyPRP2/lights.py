@@ -17,39 +17,67 @@
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
+import mathutils
 from PyHSPlasma import *
+from math import *
 import utils
 
+def setSharedLampAndSpotSettings(lamp, light):
+    Dist = lamp.distance
+    if lamp.falloff_type == "LINEAR_QUADRATIC_WEIGHTED":
+        print("  Linear Quadratic Attenuation")
+        light.attenQuadratic = lamp.quadratic_attenuation/Dist
+        light.attenLinear = lamp.linear_attenuation/Dist
+        light.attenConst = 1.0
+    elif lamp.falloff_type == "CONSTANT":
+        print("  Constant Attenuation")
+        light.attenQuadratic = 0.0
+        light.attenLinear = 0.0
+        light.attenConst = 1.0
+    else:
+        print("  Linear Attenuation")
+        light.attenQuadratic = 0.0
+        light.attenLinear = 1.0/Dist
+        light.attenConst = 1.0
 
-def ExportLamp(rm, loc, blObj, vos, sceneobject):
+    if lamp.use_sphere:
+        print("  Sphere cutoff mode at %f" % lamp.distance)
+        light.attenCutoff = Dist
+    else:
+        print("  Long-range cutoff")
+        light.attenCutoff = Dist*2 #it should be about twice the half distance eg. (1+1/2+1/4+1/8+1/16)
+
+def ExportLamp(rm, loc, blObj, sceneobject):
     lamp = blObj.data
     if lamp.type == "POINT":
         print(" [OmniLight]")
         light = plOmniLightInfo(blObj.name)
-        Dist = lamp.distance
-        if lamp.falloff_type == "LINEAR_QUADRATIC_WEIGHTED":
-            print("  Linear Quadratic Attenuation")
-            light.attenQuadratic = lamp.quadratic_attenuation/Dist
-            light.attenLinear = lamp.linear_attenuation/Dist
-            light.attenConst = 1.0
-        else:
-            print("  Linear Attenuation")
-            light.attenQuadratic = 0.0
-            light.attenLinear = 1.0/Dist
-            light.attenConst = 1.0
+        setSharedLampAndSpotSettings(lamp, light)
+    elif lamp.type == "SPOT":
+        print(" [SpotLight]")
+        light = plSpotLightInfo(blObj.name)
+        setSharedLampAndSpotSettings(lamp, light)
 
-        if lamp.use_sphere:
-            print("  Sphere cutoff mode at %f" % lamp.distance)
-            light.attenCutoff = Dist
+        spotsize = lamp.spot_size
+        light.spotOuter = spotsize
+        blend = lamp.spot_blend
+        if blend == 0: #prevent divide by zero later on
+            blend = 0.001
+        light.spotInner = spotsize-(blend*spotsize)
+        if lamp.use_halo:
+            light.falloff = lamp.halo_intensity
         else:
-            print("  Long-range cutoff")
-            light.attenCutoff = Dist*2 #it should be about twice the half distance eg. (1+1/2+1/4+1/8+1/16)
+            light.falloff = 1.0
+    elif lamp.type == "SUN":
+        print(" [DirectionalLight]")
+        light = plDirectionalLightInfo(blObj.name)
     else:
-        raise Exception("Unsupported Lamp Type")
+        raise Exception("Unsupported Lamp Type %s"%lamp.type)
     #do stuff that's needed for every type of light
-    light.owner = sceneobject.key
-    light.sceneNode = rm.getSceneNode(loc).key
-    rm.AddObject(loc,light)
+    if rm: #allow us to run this on something other than age export
+        light.owner = sceneobject.key
+        light.sceneNode = rm.getSceneNode(loc).key
+        rm.AddObject(loc,light)
     # Determine negative lighting....
     if lamp.use_negative:
         print("  >>>Negative light<<<")
@@ -120,36 +148,96 @@ def add_colors(col1, col2):
     #if the value is over one it will be changed to one automatically when it is set
     return (col1[0]+col2[0],col1[1]+col2[1],col1[2]+col2[2])
 
-def calc_color_omni(pllamp, distance, normal_dot):
+def calc_simple_lighting_factor(pllamp, light_pos, vertex_pos, vertex_normal):
+    l_dir = (light_pos-vertex_pos)
+    distance = l_dir.length
+    l_dir.normalize()
+    normal_dot = vertex_normal.dot(l_dir)
+    if normal_dot < 0:
+        return 0.0
+    if distance > pllamp.attenCutoff:
+        return 0.0
     factor = (1/(pllamp.attenConst + pllamp.attenLinear*distance + pllamp.attenQuadratic*(distance**2)))*normal_dot
+    return factor
+
+def calc_color_omni(pllamp, vertex_pos, vertex_normal, light_matrix):
+    l_pos = light_matrix.to_translation()
+    factor = calc_simple_lighting_factor(pllamp, l_pos, vertex_pos, vertex_normal)
+    return pllamp.diffuse.red*factor,pllamp.diffuse.green*factor,pllamp.diffuse.blue*factor
+
+def calc_color_spot(pllamp, vertex_pos, vertex_normal, light_matrix):
+    l_pos = light_matrix.to_translation()
+    v_dir = (vertex_pos-l_pos)
+    v_dir.normalize()
+    l_dir = mathutils.Vector((0, 0, -1)) * light_matrix.to_3x3()
+    l_dir.normalize()
+    a = l_dir.dot(v_dir)
+    inner_a = cos(pllamp.spotInner/2.0)
+    outer_a = cos(pllamp.spotOuter/2.0)
+    spot_factor = ((a-outer_a)/(inner_a-outer_a))**pllamp.falloff
+    if spot_factor <= 0:
+        return 0.0, 0.0, 0.0
+
+    simple_factor = calc_simple_lighting_factor(pllamp, l_pos, vertex_pos, vertex_normal)
+    factor = simple_factor*spot_factor
+    return pllamp.diffuse.red*factor,pllamp.diffuse.green*factor,pllamp.diffuse.blue*factor
+
+def calc_color_directional(pllamp, vertex_pos, vertex_normal, light_matrix):
+    l_dir = mathutils.Vector((0, 0, -1)) * light_matrix.to_3x3()
+    l_dir.normalize()
+    l_dir.negate()
+    factor = vertex_normal.dot(l_dir)
+    if factor <= 0:
+        return 0.0, 0.0, 0.0
     return pllamp.diffuse.red*factor,pllamp.diffuse.green*factor,pllamp.diffuse.blue*factor
 
 def light_mesh(mesh, matrix_world, pllamp, vpaint):
     #decide lighting function
     if pllamp.key.type == plFactory.kOmniLightInfo:
         lightfunc = calc_color_omni
+    elif pllamp.key.type == plFactory.kSpotLightInfo:
+        lightfunc = calc_color_spot
+    elif pllamp.key.type == plFactory.kDirectionalLightInfo:
+        lightfunc = calc_color_directional
     else:
         #unsupported type
         return
 
-    l_pos = utils.hsMatrix44_2_blMatrix44(pllamp.lightToWorld).to_translation()
+    l_mat = utils.hsMatrix44_2_blMatrix44(pllamp.lightToWorld)
     for index_face, face in enumerate(mesh.faces):
         for index_v, vertexind in enumerate(face.vertices):
             v_pos = mesh.vertices[vertexind].co*matrix_world
-            l_dir = (l_pos-v_pos)
-            l_dir.normalize()
-            dot = mesh.vertices[vertexind].normal.dot(l_dir)
-            if dot < 0:
-                continue
-            dist = (v_pos-l_pos).length
-            if dist > pllamp.attenCutoff:
-                continue
+            v_norm = mesh.vertices[vertexind].normal
             #very, very ugly
             if index_v == 0:
-                vpaint.data[index_face].color1 = add_colors(vpaint.data[index_face].color1,lightfunc(pllamp, dist,dot))
+                vpaint.data[index_face].color1 = add_colors(vpaint.data[index_face].color1,lightfunc(pllamp, v_pos, v_norm, l_mat))
             elif index_v == 1:
-                vpaint.data[index_face].color2 = add_colors(vpaint.data[index_face].color2,lightfunc(pllamp, dist,dot))
+                vpaint.data[index_face].color2 = add_colors(vpaint.data[index_face].color2,lightfunc(pllamp, v_pos, v_norm, l_mat))
             elif index_v == 2:
-                vpaint.data[index_face].color3 = add_colors(vpaint.data[index_face].color3,lightfunc(pllamp, dist,dot))
+                vpaint.data[index_face].color3 = add_colors(vpaint.data[index_face].color3,lightfunc(pllamp, v_pos, v_norm, l_mat))
             else:
-                vpaint.data[index_face].color4 = add_colors(vpaint.data[index_face].color4,lightfunc(pllamp, dist,dot))
+                vpaint.data[index_face].color4 = add_colors(vpaint.data[index_face].color4,lightfunc(pllamp, v_pos, v_norm, l_mat))
+
+class PlasmaVBakeLight(bpy.types.Operator):
+    '''Bake Plasma Lights to Vertex Paint'''
+    bl_idname = "object.plasma_vbake_light"
+    bl_label = "Bake Vertex Light"
+    
+    def execute(self, context):
+        obj = context.object
+        auto_bake_paint = obj.data.vertex_colors.get("autobake")
+        if not auto_bake_paint:
+            auto_bake_paint = obj.data.vertex_colors.new("autobake")
+        amb = tuple(context.scene.world.ambient_color)
+        set_vertex_color(auto_bake_paint, amb)
+        for item in context.scene.objects:
+            if item.type == "LAMP":
+                pllamp = ExportLamp(None, None, item, None)
+                light_mesh(obj.data, obj.matrix_world, pllamp, auto_bake_paint)
+        return {'FINISHED'}
+
+def register():
+    bpy.utils.register_class(PlasmaVBakeLight)
+
+def unregister():
+    bpy.utils.unregister_class(PlasmaVBakeLight)
