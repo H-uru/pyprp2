@@ -103,14 +103,58 @@ class plPagePanel(bpy.types.Panel):
         layout.prop(pl, 'load')
         layout.prop(pl, 'itinerant')
 
+class plUnits(bpy.types.Panel):
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = 'scene'
+    bl_label = 'Plasma Units'
+
+    @classmethod
+    def poll(self, context):
+        return context.scene != None
+
+    def draw(self, context):
+        layout = self.layout
+        scn = context.scene
+        layout.label(text = "One Blender Square =")
+        layout.operator("scene.plasma_set_foot")
+        layout.operator("scene.plasma_set_meter")
+
+class PlasmaSetMeter(bpy.types.Operator):
+    '''Set units so that one Blender square is equal to one meter in Plasma'''
+    bl_idname = "scene.plasma_set_meter"
+    bl_label = "Meter"
+
+    def execute(self, context):
+        units = context.scene.unit_settings
+        units.system = "METRIC"
+        units.scale_length = 0.3048
+        return {'FINISHED'}
+
+class PlasmaSetFoot(bpy.types.Operator):
+    '''Set units so that one Blender square is equal to one foot in Plasma'''
+    bl_idname = "scene.plasma_set_foot"
+    bl_label = "Foot"
+    
+    def execute(self, context):
+        units = context.scene.unit_settings
+        units.system = "NONE"
+        return {'FINISHED'}
+
 def register():
     bpy.utils.register_class(PlasmaAgeSettings)
     bpy.utils.register_class(PlasmaPageSettings)
     bpy.utils.register_class(plAgeSettingsPanel)
     bpy.utils.register_class(plPagePanel)
+    bpy.utils.register_class(PlasmaSetMeter)
+    bpy.utils.register_class(PlasmaSetFoot)
+    bpy.utils.register_class(plUnits)
 
 def unregister():
     bpy.utils.unregister_class(plPagePanel)
     bpy.utils.unregister_class(plAgeSettingsPanel)
     bpy.utils.unregister_class(PlasmaPageSettings)
     bpy.utils.unregister_class(PlasmaAgeSettings)
+    bpy.utils.unregister_class(plUnits)
+    bpy.utils.unregister_class(PlasmaSetFoot)
+    bpy.utils.unregister_class(PlasmaSetMeter)
