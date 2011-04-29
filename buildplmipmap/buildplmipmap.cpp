@@ -26,6 +26,7 @@
 
 #include <IL/il.h>
 #include <IL/ilu.h>
+#include <Python.h>
 
 unsigned int getClosestDXTSize(unsigned int size) {
     unsigned int p2 = 1;
@@ -36,16 +37,12 @@ unsigned int getClosestDXTSize(unsigned int size) {
     return p2;
 }
 
-int main(int argc, char **argv) {
-    if (argc != 5) {
-        printf("Usage: buildplmipmap [srcimage] [outfile] [type] [dxttype]");
-        return 0;
-    }
+void build_mipmap(static char* srcimage, static char* outfile, static char* type, unsigned int dxttype) {
     ILuint ImgId;
     ilInit();
     ilGenImages(1, &ImgId);
     ilBindImage(ImgId);
-    ilLoadImage(argv[1]);
+    ilLoadImage(srcimage);
     ILinfo ImageInfo;
     iluGetImageInfo(&ImageInfo);
     iluImageParameter(ILU_FILTER, ILU_BILINEAR);
@@ -53,14 +50,14 @@ int main(int argc, char **argv) {
     unsigned int new_w = getClosestDXTSize(ImageInfo.Width);
     unsigned int new_h = getClosestDXTSize(ImageInfo.Height);
     if (ImageInfo.Width != new_w || ImageInfo.Height != new_h) {
-        printf("Sizing to %i %i\n",new_w,new_h);
+        //printf("Sizing to %i %i\n",new_w,new_h);
         iluScale(new_w, new_h, 1);
     }
-    if (plString(argv[3]) == "mipmap") {
+    if (plString(type) == "mipmap") {
         plMipmap mip;
-        if (plString(argv[4]) == "DXT1")
+        if (dxttype == 1)
             mip.Create(new_w,new_h, 0, plMipmap::kDirectXCompression, plMipmap::kRGB8888,plMipmap::kDXT1);
-        else if (plString(argv[4]) == "DXT5")
+        else if (dxttype == 5)
             mip.Create(new_w,new_h, 0, plMipmap::kDirectXCompression, plMipmap::kRGB8888,plMipmap::kDXT5);
         unsigned int width;
         unsigned int height;
@@ -71,16 +68,44 @@ int main(int argc, char **argv) {
             height = mip.getLevelHeight(level);
             size = mip.getLevelSize(level);
             unsigned char* ldata = new unsigned char[width*height*4];
-            printf("%i x %i\n",width,height);
+            //printf("%i x %i\n",width,height);
             if (level != 0)
                 iluScale(width, height, 1);
             ilCopyPixels(0, 0, 0, width, height, 1, IL_RGBA, IL_UNSIGNED_BYTE, ldata);
             mip.CompressImage(level, ldata, size);
         }
         hsFileStream os;
-        os.open(argv[2],fmWrite);
+        os.open(outfile,fmWrite);
         mip.writeData(&os);
         os.close();
     }
-    return 0;
+}
+
+static PyObject* build_m(PyObject* self, PyObject* args) {
+    static char* srcimage;
+    static char* outfile;
+    static char* type;
+    unsigned int dxttype;
+    if (!PyArg_ParseTuple(args, "sssi", &srcimage, &outfile, &type, &dxttype))
+        PyErr_SetString(PyExc_TypeError, "build expects string, string, string, int");
+   build_mipmap(srcimage, outfile, type, dxttype);
+   return Py_None;
+}
+
+static PyMethodDef BuildPlMipmapMethods[] = {
+    {"build",  build_m, METH_VARARGS, "Build Mipmap."},
+    {NULL, NULL, 0, NULL}
+};
+
+static struct PyModuleDef buildplmipmap_module = {
+   PyModuleDef_HEAD_INIT,
+   "buildplmipmap",
+   NULL,
+   -1,
+   BuildPlMipmapMethods
+};
+
+PyMODINIT_FUNC
+PyInit_buildplmipmap(void) {
+    return PyModule_Create(&buildplmipmap_module);
 }

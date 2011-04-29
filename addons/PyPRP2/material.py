@@ -20,8 +20,8 @@ import bpy
 from PyHSPlasma import *
 import utils
 import os
-import subprocess
 import hashlib
+import buildplmipmap
 
 def SetLayerColorToBlMat(layer, material):
     dcolor = material.diffuse_color
@@ -55,9 +55,6 @@ def SetLayerFlags(slot,layer,material):
 def HandleMipmap(texture):
     srcpath = bpy.path.abspath(texture.image.filepath)
     cachepath = os.path.join(bpy.path.abspath(bpy.context.scene.world.plasma_age.export_dir), "texcache")
-    # TODO: Make this work when buildplmipmap is somewhere else on the system path
-    exepath = os.path.split(bpy.app.binary_path)[0]
-    buildplmipmap_path = os.path.join(exepath, "buildplmipmap")
     imagename = os.path.split(srcpath)[1]
     cachename = os.path.splitext(imagename)[0]
     cachefilepathfull = os.path.join(cachepath,cachename)
@@ -94,12 +91,11 @@ def HandleMipmap(texture):
         srctex.close()
         src_checksum.close()
         #compress texture
-        compresstype = "DXT1"
         if texture.use_alpha:
-            compresstype = "DXT5"
-        callstuff = [buildplmipmap_path, srcpath, cachefilepathfull, "mipmap", compresstype]
-        print(callstuff)
-        subprocess.call(callstuff)
+            compresstype = 5
+        else:
+            compresstype = 1
+        buildplmipmap.build(srcpath, cachefilepathfull, "mipmap", compresstype)
 
     imgsstream.open(cachefilepathfull, fmRead)
     mipmap.readData(imgsstream)
