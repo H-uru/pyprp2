@@ -26,7 +26,11 @@ class SpawnModifier(bpy.types.Operator):
     category = 'Avatar'
 
     @staticmethod
-    def Export(rm, so, mod):
+    def Draw(layout, obj, mod):
+        pass
+
+    @staticmethod
+    def Export(rm, so, obj, mod):
         spawnmod = plSpawnModifier(mod.name)
         so.addModifier(spawnmod.key)
         rm.AddObject(so.key.location, spawnmod)
@@ -38,6 +42,10 @@ class SpawnModifier(bpy.types.Operator):
         mod.name = ob.name
         mod.modclass = SpawnModifier.bl_idname.split('.')[1]
         return {'FINISHED'}
+
+    @classmethod
+    def poll(self, context):
+        return context.active_object
 
 def register():
     bpy.utils.register_class(SpawnModifier)

@@ -294,12 +294,11 @@ def ExportSceneObject(rm,loc,blObj, vos):
     blmods = blObj.plasma_settings.modifiers
     if len(blmods) > 0:
         for mod in blmods:
-            getattr(bpy.types, 'OBJECT_OT_' + mod.modclass).Export(rm, so, mod)
+            modifiers.getClassFromModType(mod.modclass).Export(rm, so, blObj, mod)
     if blObj.plasma_settings.isdrawable:
         hasCI = True
     if blObj.type == "LAMP":
         hasCI = True #force CI for lamp
-        #this lamp code crashes.  I believe the light object becomes corrupted as data is added to it.
         light = lights.ExportLamp(rm, loc, blObj, so).key
         vos.lights[blObj] = light
         so.addInterface(light)

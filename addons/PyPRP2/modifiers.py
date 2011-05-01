@@ -26,6 +26,17 @@ import sys
 def add_mod_menu(mod):
     return lambda self, context: self.layout.operator(mod.bl_idname, text=mod.bl_label)
 
+def modDeleteData(obj, data_id):
+    for key, value in obj.items():
+        s = key.split(":")
+        if len(s) > 1:
+            if data_id == int(s[0]):
+                del obj[key]
+                del obj["_RNA_UI"][key]
+
+def getClassFromModType(modtype):
+    return getattr(bpy.types, 'OBJECT_OT_' + modtype)
+
 class PlasmaModifierMenu(bpy.types.Menu):
     bl_idname = 'PlasmaModifierMenu'
     bl_label = 'Add Modifier'
@@ -60,6 +71,7 @@ class PlasmaModifierMenu(bpy.types.Menu):
 
 class PlasmaModifierSettings(bpy.types.PropertyGroup):
     modclass = StringProperty(attr = 'modclass', name = 'Type', default = '')
+    data_id = IntProperty(attr = 'data_id', default = -1)
 
 class PlasmaModifierRemove(bpy.types.Operator):
     bl_idname = 'object.plremovemodifier'
@@ -73,7 +85,8 @@ class PlasmaModifierRemove(bpy.types.Operator):
     def execute(self, context):
         ob = context.object
         pl = ob.plasma_settings
-
+        data_id = pl.modifiers[pl.activemodifier].data_id
+        modDeleteData(ob, data_id)
         pl.modifiers.remove(pl.activemodifier)
         pl.activemodifier -= 1
         return {'FINISHED'}
@@ -107,8 +120,8 @@ class PlasmaModifierPanel(bpy.types.Panel):
             row.active = False
             row.enabled = False
             row.prop(mod, 'modclass', text = 'Type')
-            
-            
+            c = getClassFromModType(mod.modclass)
+            c.Draw(layout, ob, mod)
 
 def register():
     bpy.utils.register_class(PlasmaModifierMenu)
