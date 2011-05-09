@@ -40,7 +40,7 @@ class PlasmaAgeSettings(bpy.types.PropertyGroup):
                                   default='PVMOUL')
     isadvanced = BoolProperty(name='Advanced Settings', default=False)
     daylength = FloatProperty(name='Day Length', default=24.0, soft_min=0.0)    
-    startdaytime = IntProperty(name='Start Day Time', default=0, soft_min=0)
+    startdatetime = IntProperty(name='Start Date Time', default=0, soft_min=0)
     maxcapacity = IntProperty(name='Max Capacity', default=150, soft_min=0, soft_max=1000)
     lingertime = IntProperty(name='Linger Time', default=180, soft_min=0)
     releaseversion = IntProperty(name='Release Version', default=0, soft_min=0)
@@ -74,7 +74,7 @@ class plAgeSettingsPanel(bpy.types.Panel):
         layout.prop(pl, 'isadvanced')
         if pl.isadvanced:
             layout.prop(pl, 'daylength')
-            layout.prop(pl, 'startdaytime')
+            layout.prop(pl, 'startdatetime')
             layout.prop(pl, 'maxcapacity')
             layout.prop(pl, 'lingertime')
             layout.prop(pl, 'releaseversion')
