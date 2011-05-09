@@ -121,7 +121,7 @@ class PlasmaExportAge(bpy.types.Operator):
         ageinfo.maxCapacity = plsettings.maxcapacity
         ageinfo.lingerTime = plsettings.lingertime
         ageinfo.releaseVersion = plsettings.releaseversion
-        if plsettings.startdateime > 0:
+        if plsettings.startdatetime > 0:
             ageinfo.startDateTime = plsettings.startdatetime
         print("Commencing export of Scenes/Pages")
         if context.mode != "OBJECT":
