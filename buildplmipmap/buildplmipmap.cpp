@@ -37,7 +37,7 @@ unsigned int getClosestDXTSize(unsigned int size) {
     return p2;
 }
 
-void build_mipmap(static char* srcimage, static char* outfile, static char* type, unsigned int dxttype) {
+void build_mipmap(const char* srcimage, const char* outfile, const char* type, unsigned int dxttype) {
     ILuint ImgId;
     ilInit();
     ilGenImages(1, &ImgId);
