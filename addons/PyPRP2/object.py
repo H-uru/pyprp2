@@ -29,6 +29,7 @@ class PlasmaObjectSettings(bpy.types.PropertyGroup):
     activemodifier = IntProperty(attr = 'activemodifier', default = 0)
     isdrawable = BoolProperty(name="Is Drawable", default=True, description="Export drawable for this object")
     isdynamic = BoolProperty(name="Dynamic", default=False)
+    noexport = BoolProperty(name="Disable Export", default=False, description="Do not export this object to an age or prp")
 
 class plObject(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
@@ -42,6 +43,7 @@ class plObject(bpy.types.Panel):
         pl = view.plasma_settings
         self.layout.prop(pl, "isdrawable")
         self.layout.prop(pl, "isdynamic")
+        self.layout.prop(pl, "noexport")
 
 def register():
     bpy.utils.register_class(plObject)

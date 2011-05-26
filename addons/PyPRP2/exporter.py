@@ -273,11 +273,15 @@ def ExportSceneNode(rm,loc,blScn,pagename,agename, vos):
     rm.AddObject(loc,node)
     #get those lamps to export first
     for blObj in blScn.objects:
+        if blObj.plasma_settings.noexport:
+            continue
         if blObj.type == "LAMP":
             plScnObj = ExportSceneObject(rm, loc, blObj, vos)
             node.addSceneObject(plScnObj.key)
             
     for blObj in blScn.objects:
+        if blObj.plasma_settings.noexport:
+            continue
         if blObj.type != "LAMP":
             plScnObj = ExportSceneObject(rm, loc, blObj, vos)
             node.addSceneObject(plScnObj.key)
