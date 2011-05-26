@@ -29,11 +29,11 @@ class PlasmaAgeSettings(bpy.types.PropertyGroup):
     export_dir = StringProperty(name='Export Path', subtype='DIR_PATH')
     prefix = IntProperty(name='Unique Age Prefix', default=randomint, soft_min=0, soft_max=20000)
     plasmaversion = EnumProperty(items=(
-                                      ('PVPRIME', 'Plasma 2.0 (59.11)', 'Ages Beyond Myst, To D\'ni, Untìl Uru'),
-                                      ('PVPOTS', 'Plasma 2.0 (59.12)', 'Path of the Shell, Complete  Chronicles'),
-                                      ('PVMOUL', 'Plasma 2.0 (70.9)', 'Myst Online: Uru Live, MOULagain, MagiQuest Online'),
-                                      ('PVEOA', 'Plasma 2.1', 'End of Ages, Crowthistle'),
-                                      ('PVHEX', 'Plasma 3.0', 'HexIsle')
+                                      ('PVPRIME', 'Uru: Ages Beyond Myst', 'To D\'ni, Untìl Uru: Plasma 2.0 [59.11]'),
+                                      ('PVPOTS', 'Uru: Complete Chronicles', 'Path of the Shell: Plasma 2.0 [59.12]'),
+                                      ('PVMOUL', 'Myst Online: Uru Live', 'CWE, MOULagain, MagiQuest Online: Plasma 2.0 [70.9]'),
+                                      ('PVEOA', 'Myst V: End of Ages', 'Crowthistle: Plasma 2.1'),
+                                      ('PVHEX', 'Cosmic Osmo\'s Hex Isle', 'Plasma 3.0')
                                   ),
                                   name='Plasma Version',
                                   description='Plasma Engine Version',
