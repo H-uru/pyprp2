@@ -74,7 +74,7 @@ class plPhysicalPanel(bpy.types.Panel):
             layout.label(text="bounds type currently unsupported")
 
     @staticmethod
-    def Export(rm,loc,blObj,so):
+    def Export(rm,loc,blObj,blMesh,so):
         plphysical = plGenericPhysical(blObj.name)
         plphysical.sceneNode = rm.getSceneNode(loc).key
         plphysical.object = so.key
@@ -102,11 +102,11 @@ class plPhysicalPanel(bpy.types.Panel):
         if plphysical.boundsType == plSimDefs.kSphereBounds: #sphere
              plphysical.radius = blObj.plasma_settings.physics.radius
         elif plphysical.boundsType == plSimDefs.kProxyBounds: #proxy
-            plphysical.verts, plphysical.indices = BuildProxyBounds(blObj,dynamic) #do a little odd-looking compact python code
+            plphysical.verts, plphysical.indices = BuildProxyBounds(blObj,blMesh,dynamic) #do a little odd-looking compact python code
         rm.AddObject(loc,plphysical)
         return plphysical
 
-def BuildProxyBounds(blObj, dynamic):
+def BuildProxyBounds(blObj, blMesh, dynamic):
     if dynamic:
         mat = blObj.matrix_local.__copy__()
         mat[3][:3] = [0,0,0] #translate to 0,0,0
@@ -115,13 +115,13 @@ def BuildProxyBounds(blObj, dynamic):
         
     verts = []
     inds = []
-    for face in blObj.data.faces:
+    for face in blMesh.faces:
         if len(face.vertices) == 3:
             inds.extend(face.vertices[:3])
         elif len(face.vertices) == 4:
             inds.extend(face.vertices[:3])
             inds.extend([face.vertices[0],face.vertices[2],face.vertices[3]])
-    for vert in blObj.data.vertices:
+    for vert in blMesh.vertices:
         vert_trans = mathutils.Vector(vert.co)*mat
         verts.append(hsVector3(vert_trans[0],vert_trans[1],vert_trans[2]))
     return verts, inds

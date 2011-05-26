@@ -201,10 +201,9 @@ class GeometryManager: #this could be passed all the stuff needed to make dspans
         for i in range(len(self.dspans_list)):
             self.FinallizeDSpans(i)
             
-    def AddBlenderMeshToDSpans(self, dspansind, blObj, hasCI, vos):
+    def AddBlenderMeshToDSpans(self, dspansind, blObj, mesh, hasCI, vos):
         material_keys = vos.materials
         light_keys = vos.lights
-        mesh = blObj.data
         hasvtxcolor = (set(mesh.vertex_colors.keys()) & set(colour_names) != set())
         hasvtxalpha = (set(mesh.vertex_colors.keys()) & set(alpha_names) != set())
         

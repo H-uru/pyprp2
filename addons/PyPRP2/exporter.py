@@ -296,7 +296,7 @@ def ExportSceneObject(rm,loc,blObj, vos):
         for mod in blmods:
             modifiers.getClassFromModType(mod.modclass).Export(rm, so, blObj, mod)
     if blObj.plasma_settings.isdrawable:
-        hasCI = True
+        hasCI = True # TODO: make more informed decisions about when to export a CI
     if blObj.type == "LAMP":
         hasCI = True #force CI for lamp
         light = lights.ExportLamp(rm, loc, blObj, so).key
@@ -304,17 +304,22 @@ def ExportSceneObject(rm,loc,blObj, vos):
         so.addInterface(light)
     elif blObj.type == "EMPTY":
         hasCI = True
-    elif blObj.type == "MESH":
-        print("    as a mesh")
-        physics = blObj.plasma_settings.physics.enabled
-        if physics:
-            print("    with a physical")
-            so.sim = ExportSimInterface(rm,loc,blObj,so).key
-        #drawable
-        isdrawable = blObj.plasma_settings.isdrawable
-        print("    as a drawable")
-        if isdrawable:
-            so.draw = ExportDrawInterface(rm,loc,blObj,so,hasCI,vos).key
+    else: # we try to export all remaining types as meshes, if it all possible
+        try:
+            blMesh = blObj.to_mesh(bpy.context.scene, True, 'RENDER')
+            print("    as a mesh")
+            physics = blObj.plasma_settings.physics.enabled
+            if physics:
+                print("    with a physical")
+                so.sim = ExportSimInterface(rm,loc,blObj,blMesh,so).key
+            #drawable
+            isdrawable = blObj.plasma_settings.isdrawable
+            print("    as a drawable")
+            if isdrawable:
+                so.draw = ExportDrawInterface(rm,loc,blObj,blMesh,so,hasCI,vos).key
+            bpy.context.blend_data.meshes.remove(blMesh)
+        except:
+            pass
     if hasCI:
         print("With CI")
         so.coord = ExportCoordInterface(rm,loc,blObj,so).key
@@ -335,27 +340,27 @@ def ExportCoordInterface(rm,loc,blObj,so):
     ci.parentToLocal = w2l
     return ci
 
-def ExportDrawInterface(rm,loc,blObj,so, hasCI,vos):
+def ExportDrawInterface(rm,loc,blObj, blMesh,so, hasCI,vos):
     di = plDrawInterface(blObj.name)
     rm.AddObject(loc,di)
     di.owner = so.key
     renderlevel = 0
     #deciding what render level/criteria is currently very crude
-    if blObj.data.vertex_colors.get("Alpha"): #if we have vertex alpha paint
+    if blMesh.vertex_colors.get("Alpha"): #if we have vertex alpha paint
         renderlevel |= (plRenderLevel.kBlendRendMajorLevel << plRenderLevel.kMajorShift)
     passindxstr = ""
     if blObj.pass_index != 0:
         passindxstr = str(blObj.pass_index)
     spanind = vos.geomgr.FindOrCreateDrawableSpans(rm, loc, renderlevel, 0, passindxstr)
-    dspans,diind = vos.geomgr.AddBlenderMeshToDSpans(spanind,blObj, hasCI, vos) #export our mesh
+    dspans,diind = vos.geomgr.AddBlenderMeshToDSpans(spanind,blObj, blMesh, hasCI, vos) #export our mesh
     di.addDrawable(dspans.key,diind)
     return di
 
-def ExportSimInterface(rm,loc,blObj,so):
+def ExportSimInterface(rm,loc,blObj,blMesh,so):
     si = plSimulationInterface(blObj.name)
     rm.AddObject(loc,si)
     si.owner = so.key
-    si.physical = physics.plPhysicalPanel.Export(rm,loc,blObj,so).key
+    si.physical = physics.plPhysicalPanel.Export(rm,loc,blObj,blMesh,so).key
     return si
 
 def register():
