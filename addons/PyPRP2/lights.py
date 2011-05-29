@@ -238,8 +238,3 @@ class PlasmaVBakeLight(bpy.types.Operator):
                 light_mesh(obj.data, obj.matrix_world, pllamp, auto_bake_paint)
         return {'FINISHED'}
 
-def register():
-    bpy.utils.register_class(PlasmaVBakeLight)
-
-def unregister():
-    bpy.utils.unregister_class(PlasmaVBakeLight)

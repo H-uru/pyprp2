@@ -304,10 +304,8 @@ class plGeometryPanel(bpy.types.Panel):
         box.operator("object.plasma_vbake_light")
 
 def register():
-    lights.register()
     bpy.utils.register_class(plGeometryPanel)
 
 def unregister():
-    lights.register()
     bpy.utils.unregister_class(plGeometryPanel)
 
