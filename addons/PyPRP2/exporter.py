@@ -68,7 +68,7 @@ def export_scene_as_prp(rm, loc, blscene, agename, path):
     rm.AddPage(page)
     fullpagename = "%s_District_%s.prp"%(page.age, page.page)
     print("Writing Page %s"%fullpagename)
-    rm.WritePage(os.path.join(os.path.dirname(path),fullpagename), page)
+    rm.WritePage(os.path.join(path,fullpagename), page)
     GeoMgr = None #clean up
 
 def export_fog(s, world):
