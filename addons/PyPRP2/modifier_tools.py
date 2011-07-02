@@ -16,34 +16,26 @@
 #    You should have received a copy of the GNU General Public License
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
-def getModPropName(data_id, variable):
-    return '["%i:%s"]'%(data_id, variable)
+import bpy
 
-#this class can be extended to set all the _RNA_UI settings
-def modVariable(obj, data_id, varname, default, min=-100, max=100):
-    if not obj.get("_RNA_UI"):
-        obj["_RNA_UI"] = {}
-    key = "%i:%s"%(data_id, varname)
-    obj[key] = default
-    obj["_RNA_UI"][key] = {"min":min, "max":max, "soft_min":min, "soft_max":max}
-    return key
+def createModifier(context, modifier_class, name):
+    ob = context.object
+    pl = ob.plasma_settings
+    mod = pl.modifiers.add()
+    mclass = modifier_class.bl_idname.split('.')[1]
+    mod.modclass = mclass
+    collection = getattr(context.scene.plasma_modifiers, mclass)
+    classdata = collection.add()
+    classdata.type = mclass
+    classdata.name = name
+    mod.name = name
+    return classdata
 
-def drawCheesyEnum(layout, data, property, enumlist, text=""):
-    key = eval(property)[0] #hack
-    val = data[key]
-    box = layout.box()
-    box.prop(data, property, text=text)
-    box.label(text=enumlist[val])
-
-def getNextAvailableDataID(mods):
-    allocated = []
-    for mod in mods:
-        allocated.append(mod.data_id)
-    i = 0
-    while 1:
-        if not i in allocated:
-            return i
-        i+=1
-
-def getDataValue(obj, mod, variable):
-    return obj["%i:%s"%(mod.data_id, variable)]
+def dataNameCallback(self, context):
+    if self.name == '':
+        collection = getattr(context.scene.plasma_modifiers, self.type)
+        new_name = 'unnamed-'
+        i = 1
+        while new_name+str(i) in collection.keys():
+            i+=1
+        self.name = 'unnamed-'+str(i)

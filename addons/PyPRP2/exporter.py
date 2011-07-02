@@ -39,7 +39,7 @@ class VisibleObjectStuff: #do YOU have a better name for it? ;P
 def export_clean(path,agename): #deletes old files before export
     items = os.listdir(path)
     for item in items:
-        if item.startswith(agename):
+        if item.startswith(agename) and item.endswith((".age", ".fni", ".prp", ".sum")):
             os.remove(os.path.join(path,item))
 
 def convert_version(spv):
@@ -296,9 +296,11 @@ def ExportSceneObject(rm,loc,blObj, vos):
     hasCI = False
     
     blmods = blObj.plasma_settings.modifiers
-    if len(blmods) > 0:
-        for mod in blmods:
-            modifiers.getClassFromModType(mod.modclass).Export(rm, so, blObj, mod)
+    for mod_link in blmods:
+        scene = blObj.users_scene[0] #Hack.  This should be made to support multiple scenes.
+        if mod_link.name and modifiers.modDataExists(mod_link, scene):
+            mod = modifiers.getModFromLink(mod_link, scene)
+            modifiers.getClassFromModType(mod_link.modclass).Export(rm, so, blObj, mod)
     if blObj.plasma_settings.isdrawable:
         hasCI = True # TODO: make more informed decisions about when to export a CI
     if blObj.type == "LAMP":
@@ -370,7 +372,9 @@ def ExportSimInterface(rm,loc,blObj,blMesh,so):
 def register():
     bpy.utils.register_class(PlasmaExportAge)
     bpy.utils.register_class(PlasmaExportResourcePage)
+    bpy.utils.register_class(lights.PlasmaVBakeLight)
 
 def unregister():
+    bpy.utils.unregister_class(lights.PlasmaVBakeLight)
     bpy.utils.unregister_class(PlasmaExportResourcePage)
     bpy.utils.unregister_class(PlasmaExportAge)

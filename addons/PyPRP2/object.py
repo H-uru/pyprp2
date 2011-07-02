@@ -23,7 +23,7 @@ import physics
 
 class PlasmaObjectSettings(bpy.types.PropertyGroup):
     physics = PointerProperty(attr = 'physics', type = physics.PlasmaPhysicsSettings)
-    modifiers = CollectionProperty(attr = 'modifiers', type = modifiers.PlasmaModifierSettings)
+    modifiers = CollectionProperty(attr = 'modifiers', type = modifiers.PlasmaModifierLink)
 
     drawableoverride = BoolProperty(name="Drawable Override", default = False)
     activemodifier = IntProperty(attr = 'activemodifier', default = 0)

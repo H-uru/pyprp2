@@ -17,6 +17,7 @@
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
+from bpy.props import *
 from PyHSPlasma import *
 from modifier_tools import *
 
@@ -25,40 +26,47 @@ class MaintainersMarkerModifier(bpy.types.Operator):
     bl_label = 'Maintainer\'s Marker'
     bl_description = 'GPS Coordinate Marker'
     category = 'Markers'
-    calibration_enum = ['broken', "repaired", "calibrated"]
+    application = 'single'
     
     @staticmethod
     def Draw(layout, obj, mod):
-        drawCheesyEnum(layout,
-                       obj,
-                       getModPropName(mod.data_id, "calibration"),
-                       MaintainersMarkerModifier.calibration_enum, text="Calibration")
+        layout.prop(mod, 'calibration')
 
     @staticmethod
     def Export(rm, so, obj, mod):
         maintmarkmod = plMaintainersMarkerModifier(mod.name)
-        maintmarkmod.calibration = getDataValue(obj, mod, "calibration")
+        maintmarkmod.calibration = int(mod.calibration)
         so.addModifier(maintmarkmod.key)
         rm.AddObject(so.key.location, maintmarkmod)
 
     def execute(self, context):
         ob = context.object
-        pl = ob.plasma_settings
-        mod = pl.modifiers.add()
-        mod.name = ob.name
-        mod.modclass = MaintainersMarkerModifier.bl_idname.split('.')[1]
-        mod.data_id = getNextAvailableDataID(pl.modifiers)
-        modVariable(ob, mod.data_id, "calibration", 0, min=0, max=2)
+        createModifier(context, MaintainersMarkerModifier, ob.name)
         return {'FINISHED'}
 
     @classmethod
     def poll(self, context):
         return context.active_object
 
+class MaintainersMarkerModifierData(bpy.types.PropertyGroup):
+    name = StringProperty(update=dataNameCallback)
+    type = StringProperty()
+    owner = StringProperty()
+    calibration = EnumProperty(
+        items=(
+            ('0', 'Broken', ''),
+            ('1', 'Repaired', ''),
+            ('2', 'Calibrated', '')
+            ),
+            name='Calibration',
+            description='Calibration',
+            default='0')
+
 def register():
+    bpy.utils.register_class(MaintainersMarkerModifierData)
     bpy.utils.register_class(MaintainersMarkerModifier)
-    return [MaintainersMarkerModifier]
+    return [(MaintainersMarkerModifier, MaintainersMarkerModifierData)]
 
 def unregister():
     bpy.utils.unregister_class(MaintainersMarkerModifier)
-
+    bpy.utils.unregister_class(MaintainersMarkerModifierData)

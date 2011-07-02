@@ -17,14 +17,17 @@
 #    along with PyPRP2.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
+from bpy.props import *
 from PyHSPlasma import *
+from modifier_tools import *
 
 class SpawnModifier(bpy.types.Operator):
     bl_idname = 'object.plspawnmodifier'
     bl_label = 'Link-In Point'
     bl_description = 'Starting point for a player'
     category = 'Avatar'
-
+    application = 'single'
+    
     @staticmethod
     def Draw(layout, obj, mod):
         pass
@@ -37,19 +40,23 @@ class SpawnModifier(bpy.types.Operator):
 
     def execute(self, context):
         ob = context.object
-        pl = ob.plasma_settings
-        mod = pl.modifiers.add()
-        mod.name = ob.name
-        mod.modclass = SpawnModifier.bl_idname.split('.')[1]
+        createModifier(context, SpawnModifier, ob.name)
         return {'FINISHED'}
 
     @classmethod
     def poll(self, context):
         return context.active_object
 
+class SpawnModifierData(bpy.types.PropertyGroup):
+    name = StringProperty(update=dataNameCallback)
+    type = StringProperty()
+    owner = StringProperty()
+
 def register():
+    bpy.utils.register_class(SpawnModifierData)
     bpy.utils.register_class(SpawnModifier)
-    return [SpawnModifier]
+    return [(SpawnModifier, SpawnModifierData)]
 
 def unregister():
     bpy.utils.unregister_class(SpawnModifier)
+    bpy.utils.unregister_class(SpawnModifierData)
