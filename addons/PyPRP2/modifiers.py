@@ -52,7 +52,7 @@ def cleanLinkList(ob, context):
         if not modlink.name:
             pass
         elif modDataExists(modlink, context.scene):
-            mod = getModFromLink(modlink, context)
+            mod = getModFromLink(modlink, context.scene)
             app = getModifierApplication(modlink)
             if app == 'single':
                 if mod.owner != ob.name:
