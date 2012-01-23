@@ -26,6 +26,13 @@ if(WIN32)
     )
 endif()
 
+EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; sys.stdout.write('.'.join([str(x) for x in sys.version_info[:2]]))"
+                OUTPUT_VARIABLE _PYTHON_VERSION
+)
+EXECUTE_PROCESS(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; sys.stdout.write(sys.prefix)"
+                OUTPUT_VARIABLE _PYTHON_PREFIX
+)
+
 if(NOT WIN32)
     install(TARGETS buildplmipmap
             DESTINATION ${_PYTHON_PREFIX}/lib/python${_PYTHON_VERSION}
