@@ -24,8 +24,16 @@ if(WIN32)
     set_target_properties(buildplmipmap PROPERTIES
                           SUFFIX ".pyd"
     )
+endif()
+
+if(NOT WIN32)
+    install(TARGETS buildplmipmap
+            DESTINATION ${_PYTHON_PREFIX}/lib/python${_PYTHON_VERSION}
+    )
 else()
-    set_target_properties(buildplmipmap PROPERTIES
-                          SUFFIX ".so"
+    install(TARGETS buildplmipmap
+            RUNTIME DESTINATION bin
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
     )
 endif()
